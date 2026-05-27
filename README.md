@@ -22,9 +22,11 @@ npm run preview
 
 האתר מתפרסם אוטומטית ל-[liorsm.github.io/chord-book](https://liorsm.github.io/chord-book/) בכל push ל-`main`.
 
-**הגדרה חד-פעמית ב-GitHub:** Repository → Settings → Pages → Build and deployment → Source: **Deploy from a branch** → Branch: **gh-pages** → Folder: **/ (root)**.
+**הגדרה חד-פעמית (חובה):** [Settings → Pages](https://github.com/liorsm/chord-book/settings/pages) → Build and deployment → Source: **GitHub Actions** (לא `Deploy from a branch` / `main`).
 
-(אם היה מוגדר `main` — זו הסיבה הנפוצה לדף ריק או לקוד מקור במקום האפליקציה.)
+אם ה-Source נשאר על `main`, האתר יציג את קוד המקור (`/src/main.jsx`) ולא את האפליקציה הבנויה — דף ריק או ישן.
+
+**גיבוי (ענף gh-pages):** אם מעדיפים "Deploy from a branch" — ב-Settings → Actions → General אפשר **Read and write permissions**, הרץ ידנית את workflow `Deploy to gh-pages branch`, ואז ב-Pages בחר ענף **gh-pages**.
 
 **Firebase:** ב-Authentication → Authorized domains הוסף `liorsm.github.io`.
 
