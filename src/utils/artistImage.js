@@ -36,11 +36,14 @@ export function getArtistInitials(artist) {
 }
 
 export const GRADIENT_PALETTES = [
-  'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
-  'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-  'linear-gradient(135deg, #db2777 0%, #7c3aed 100%)',
-  'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)',
-  'linear-gradient(135deg, #059669 0%, #0891b2 100%)',
+  'linear-gradient(135deg, #4c1d95 0%, #7c3aed 45%, #c084fc 100%)',
+  'linear-gradient(145deg, #0f766e 0%, #10b981 50%, #6ee7b7 100%)',
+  'linear-gradient(135deg, #be185d 0%, #db2777 40%, #f472b6 100%)',
+  'linear-gradient(160deg, #1e3a8a 0%, #4f46e5 50%, #818cf8 100%)',
+  'linear-gradient(135deg, #7c2d12 0%, #ea580c 45%, #fbbf24 100%)',
+  'linear-gradient(145deg, #312e81 0%, #6366f1 50%, #a5b4fc 100%)',
+  'linear-gradient(135deg, #831843 0%, #be123c 50%, #fb7185 100%)',
+  'linear-gradient(160deg, #134e4a 0%, #0d9488 50%, #5eead4 100%)',
 ];
 
 export function getGradientForArtist(artist) {
@@ -49,4 +52,18 @@ export function getGradientForArtist(artist) {
     hash = artist.charCodeAt(i) + ((hash << 5) - hash);
   }
   return GRADIENT_PALETTES[Math.abs(hash) % GRADIENT_PALETTES.length];
+}
+
+/** Legacy playlists may store a flat hex — always show a multi-stop gradient. */
+export function resolvePlaylistCoverColor(coverColor, fallbackKey) {
+  if (coverColor && /gradient/i.test(coverColor)) {
+    return coverColor;
+  }
+  return getGradientForArtist(fallbackKey);
+}
+
+/** Layered backgrounds for playlist cards (base gradient + soft highlight). */
+export function getPlaylistCoverBackground(coverColor, fallbackKey) {
+  const base = resolvePlaylistCoverColor(coverColor, fallbackKey);
+  return `${base}, radial-gradient(ellipse 90% 70% at 18% 12%, rgba(255,255,255,0.28) 0%, transparent 52%)`;
 }

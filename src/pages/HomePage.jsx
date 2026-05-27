@@ -6,7 +6,6 @@ import Button from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
 import Card from '@mui/material/Card';
 import CardActionArea from '@mui/material/CardActionArea';
-import CardContent from '@mui/material/CardContent';
 import CircularProgress from '@mui/material/CircularProgress';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -18,6 +17,7 @@ import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useThemeMode } from '../ThemeContext';
 import { playlistPath } from '../utils/routes';
+import { getPlaylistCoverBackground } from '../utils/artistImage';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -110,15 +110,48 @@ export default function HomePage() {
                 }}
               >
                 {playlists.map((pl) => (
-                  <Card key={pl.id}>
+                  <Card key={pl.id} sx={{ overflow: 'hidden' }}>
                     <CardActionArea onClick={() => navigate(playlistPath(pl))}>
-                      <Box sx={{ height: 80, background: pl.coverColor }} />
-                      <CardContent>
-                        <Typography fontWeight={700}>{pl.name}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {pl.songIds?.length || 0} שירים
+                      <Box
+                        sx={{
+                          height: 128,
+                          backgroundImage: getPlaylistCoverBackground(
+                            pl.coverColor,
+                            pl.name || pl.id
+                          ),
+                          backgroundSize: 'cover',
+                          backgroundPosition: 'center',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          p: 2,
+                          position: 'relative',
+                          '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            inset: 0,
+                            background:
+                              'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.22) 100%)',
+                            pointerEvents: 'none',
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            position: 'relative',
+                            zIndex: 1,
+                            color: 'white',
+                            fontWeight: 800,
+                            fontSize: { xs: '1rem', sm: '1.15rem' },
+                            textAlign: 'center',
+                            lineHeight: 1.3,
+                            textShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                            px: 1,
+                          }}
+                        >
+                          {pl.name}
                         </Typography>
-                      </CardContent>
+                      </Box>
                     </CardActionArea>
                   </Card>
                 ))}

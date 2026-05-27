@@ -12,7 +12,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { GRADIENT_PALETTES } from '../utils/artistImage';
+import {
+  GRADIENT_PALETTES,
+  resolvePlaylistCoverColor,
+} from '../utils/artistImage';
 import { generatePlaylistSlug, resolveUniqueSlug } from '../utils/slug';
 
 function assignSlugsToPlaylists(docs) {
@@ -28,9 +31,9 @@ function assignSlugsToPlaylists(docs) {
     return {
       id: d.id,
       songIds: [],
-      coverColor: GRADIENT_PALETTES[0],
       ...data,
       slug: data.slug || slug,
+      coverColor: resolvePlaylistCoverColor(data.coverColor, data.name || d.id),
     };
   });
 }
