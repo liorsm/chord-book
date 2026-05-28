@@ -23,9 +23,13 @@ import {
 import { detectLanguage } from '../../utils/direction';
 import { useArtists } from '../../hooks/useArtists';
 import ArtistAutocomplete from './ArtistAutocomplete';
+import PlaylistAutocomplete from './PlaylistAutocomplete';
 
 export default function SongForm({
   initial = {},
+  initialPlaylists = [],
+  playlists,
+  playlistsLoading = false,
   onSubmit,
   submitLabel = 'שמור שיר',
   showPreview = true,
@@ -58,9 +62,20 @@ export default function SongForm({
       setArtistImagePositionY(DEFAULT_ARTIST_IMAGE_POSITION_Y);
     }
   };
+  const [selectedPlaylists, setSelectedPlaylists] = useState(initialPlaylists);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const { artists } = useArtists();
+
+  const initialPlaylistKey = initialPlaylists
+    .map((p) => p.id)
+    .sort()
+    .join(',');
+
+  useEffect(() => {
+    setSelectedPlaylists(initialPlaylists);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- sync when membership ids change
+  }, [initialPlaylistKey]);
 
   const handleArtistSelect = (selected) => {
     if (selected.imageUrl) {
@@ -146,6 +161,7 @@ export default function SongForm({
           ? artistImagePositionY
           : null,
         youtubeUrl: youtubeUrl.trim() || null,
+        playlistIds: selectedPlaylists.map((p) => p.id),
       });
     } catch (err) {
       setError(err.message || 'שגיאה בשמירה');
@@ -190,6 +206,16 @@ export default function SongForm({
             חפש תמונה
           </Button>
         </Box>
+        {playlists && (
+          <Box sx={{ mb: 2 }}>
+            <PlaylistAutocomplete
+              playlists={playlists}
+              value={selectedPlaylists}
+              onChange={setSelectedPlaylists}
+              disabled={playlistsLoading}
+            />
+          </Box>
+        )}
         <TextField
           fullWidth
           label="כתובת תמונת אמן"

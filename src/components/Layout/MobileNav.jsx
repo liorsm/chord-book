@@ -5,11 +5,15 @@ import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Box from '@mui/material/Box';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
 import { useThemeMode } from '../../ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { managePath } from '../../utils/routes';
 
 export default function MobileNav() {
   const location = useLocation();
   const { mode } = useThemeMode();
+  const { isAdmin } = useAuth();
 
   const hideNav =
     location.pathname.startsWith('/song/') ||
@@ -20,8 +24,9 @@ export default function MobileNav() {
     return null;
   }
 
-  const navValue =
-    location.pathname === '/artists' || location.pathname.startsWith('/artist/')
+  const navValue = location.pathname.startsWith('/manage')
+    ? managePath()
+    : location.pathname === '/artists' || location.pathname.startsWith('/artist/')
       ? '/artists'
       : '/';
 
@@ -63,6 +68,15 @@ export default function MobileNav() {
             component={Link}
             to="/artists"
           />
+          {isAdmin && (
+            <BottomNavigationAction
+              label="ניהול"
+              value={managePath()}
+              icon={<SettingsIcon />}
+              component={Link}
+              to={managePath()}
+            />
+          )}
         </BottomNavigation>
       </Paper>
     </Box>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
@@ -15,19 +15,42 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ThemeToggle from './ThemeToggle';
 import { useThemeMode } from '../../ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { managePath } from '../../utils/routes';
 
-const navItems = [
+const baseNavItems = [
   { label: 'בית', path: '/', icon: <HomeIcon /> },
   { label: 'אמנים', path: '/artists', icon: <PeopleIcon /> },
 ];
+
+function isNavItemActive(pathname, item) {
+  if (item.path === '/') return pathname === '/';
+  if (item.path === '/artists') {
+    return pathname === '/artists' || pathname.startsWith('/artist/');
+  }
+  if (item.path === managePath()) {
+    return pathname.startsWith('/manage');
+  }
+  return pathname === item.path;
+}
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { mode } = useThemeMode();
+  const { isAdmin } = useAuth();
+
+  const navItems = useMemo(() => {
+    if (!isAdmin) return baseNavItems;
+    return [
+      ...baseNavItems,
+      { label: 'ניהול', path: managePath(), icon: <SettingsIcon /> },
+    ];
+  }, [isAdmin]);
 
   const isSongPage =
     location.pathname.startsWith('/song/') &&
@@ -94,12 +117,7 @@ export default function Header() {
                 key={item.path}
                 component={Link}
                 to={item.path}
-                color={
-                  location.pathname === item.path ||
-                  (item.path === '/artists' && location.pathname.startsWith('/artist/'))
-                    ? 'primary'
-                    : 'inherit'
-                }
+                color={isNavItemActive(location.pathname, item) ? 'primary' : 'inherit'}
                 startIcon={item.icon}
               >
                 {item.label}
@@ -124,11 +142,7 @@ export default function Header() {
                     navigate(item.path);
                     setDrawerOpen(false);
                   }}
-                  selected={
-                    location.pathname === item.path ||
-                    (item.path === '/artists' &&
-                      location.pathname.startsWith('/artist/'))
-                  }
+                  selected={isNavItemActive(location.pathname, item)}
                 >
                   <Box sx={{ mr: 2, display: 'flex' }}>{item.icon}</Box>
                   <ListItemText primary={item.label} />
