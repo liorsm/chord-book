@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Drawer from '@mui/material/Drawer';
+import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -18,6 +19,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ThemeToggle from './ThemeToggle';
+import AuthButton from './AuthButton';
 import { useThemeMode } from '../../ThemeContext';
 
 const navItems = [
@@ -102,10 +104,12 @@ export default function Header() {
                 {item.label}
               </Button>
             ))}
+            <AuthButton />
             <ThemeToggle />
           </Box>
 
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center' }}>
+          <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', gap: 0.5 }}>
+            <AuthButton />
             <ThemeToggle />
           </Box>
         </Toolbar>
@@ -128,6 +132,8 @@ export default function Header() {
                 </ListItemButton>
               </ListItem>
             ))}
+            <Divider sx={{ my: 1 }} />
+            <AuthButton variant="menuItem" onMenuClose={() => setDrawerOpen(false)} />
           </List>
         </Box>
       </Drawer>
