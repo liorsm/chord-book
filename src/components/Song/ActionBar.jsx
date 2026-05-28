@@ -16,7 +16,9 @@ import FormatTextdirectionRToLIcon from '@mui/icons-material/FormatTextdirection
 import FormatTextdirectionLToRIcon from '@mui/icons-material/FormatTextdirectionLToR';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import YouTubeIcon from '@mui/icons-material/YouTube';
+import Filter1Icon from '@mui/icons-material/Filter1';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Tooltip from '@mui/material/Tooltip';
 
 const FONT_OPTIONS = [
   { value: 'Rubik', label: 'Rubik' },
@@ -185,6 +187,8 @@ export default function ActionBar({
   onToggleYouTube,
   scrollSpeed = 0,
   onScrollSpeedChange,
+  chordsSimplified = false,
+  onToggleSimplifyChords,
 }) {
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
   const [scrollPopupOpen, setScrollPopupOpen] = useState(false);
@@ -277,6 +281,16 @@ export default function ActionBar({
             <FormatTextdirectionLToRIcon fontSize="small" />
           )}
         </SquareBtn>
+
+        {onToggleSimplifyChords && (
+          <Tooltip title={chordsSimplified ? 'הצג אקורדים מלאים' : 'הפשט אקורדים (B7→B, Am7→Am)'}>
+            <span>
+              <SquareBtn active={chordsSimplified} onClick={onToggleSimplifyChords}>
+                <Filter1Icon fontSize="small" />
+              </SquareBtn>
+            </span>
+          </Tooltip>
+        )}
 
         {onAddToPlaylist && (
           <SquareBtn onClick={onAddToPlaylist}>

@@ -65,6 +65,8 @@ export function simplifyChord(chord) {
   const octave = octaveSuffix ? octaveSuffix[0] : '';
   if (octave) s = s.slice(0, -octave.length);
 
+  const hadDim = /dim/i.test(s);
+
   s = s.replace(/maj7/gi, '');
   s = s.replace(/min7|m7/gi, 'm');
   s = s.replace(/maj/gi, '');
@@ -72,7 +74,12 @@ export function simplifyChord(chord) {
   s = s.replace(/dim7?|aug|sus4|sus2|add9?|[#b]?11|[#b]?13|[#b]?6|[#b]?5/gi, '');
   s = s.replace(/[#b]?9/g, '');
   s = s.replace(/7/g, '');
-  return (s || chord) + octave + bass;
+
+  let result = (s || chord) + octave;
+  if (hadDim && /^[A-G][#b]?$/i.test(result)) {
+    result += 'm';
+  }
+  return result + bass;
 }
 
 /** מעבד אקורדים בסוגריים [Am] ובמילים עצמאיות (שורת אקורדים מעל מילים) */

@@ -14,7 +14,7 @@ import AddToPlaylistDialog from '../components/Song/AddToPlaylistDialog';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useAuth } from '../contexts/AuthContext';
-import { transposeContent } from '../utils/chords';
+import { transposeContent, simplifyChords } from '../utils/chords';
 import { detectLanguage } from '../utils/direction';
 
 const MIN_SEMITONES = -6;
@@ -35,6 +35,7 @@ export default function SongPage() {
   const [snack, setSnack] = useState('');
   const [directionOverride, setDirectionOverride] = useState(null);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
+  const [chordsSimplified, setChordsSimplified] = useState(false);
 
   useEffect(() => {
     setSemitones(0);
@@ -43,13 +44,15 @@ export default function SongPage() {
     setScrollSpeed(0);
     setDirectionOverride(null);
     setYoutubeOpen(false);
+    setChordsSimplified(false);
   }, [slug]);
 
   const displayContent = useMemo(() => {
     if (!song?.content) return '';
-    let text = song.content;
-    return transposeContent(text, semitones);
-  }, [song?.content, semitones]);
+    let text = transposeContent(song.content, semitones);
+    if (chordsSimplified) text = simplifyChords(text);
+    return text;
+  }, [song?.content, semitones, chordsSimplified]);
 
   const youtubeVideoId = useMemo(
     () => parseYouTubeVideoId(song?.youtubeUrl),
@@ -106,6 +109,8 @@ export default function SongPage() {
         onToggleYouTube={() => setYoutubeOpen((v) => !v)}
         scrollSpeed={scrollSpeed}
         onScrollSpeedChange={setScrollSpeed}
+        chordsSimplified={chordsSimplified}
+        onToggleSimplifyChords={() => setChordsSimplified((v) => !v)}
       />
 
       <Box
@@ -118,7 +123,7 @@ export default function SongPage() {
       >
         <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
           <ChordViewer
-            key={`${song?.id}-${semitones}-${fontSize}-${fontFamily}-${directionOverride}`}
+            key={`${song?.id}-${semitones}-${chordsSimplified}-${fontSize}-${fontFamily}-${directionOverride}`}
             content={displayContent}
             language={language}
             fontSize={fontSize}
