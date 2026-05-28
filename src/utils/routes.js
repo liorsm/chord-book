@@ -22,3 +22,14 @@ export function editSongPath(song) {
 export function managePath() {
   return '/manage';
 }
+
+/** נתיב לדף אמן */
+export function artistPath(artist) {
+  if (!artist) return '/artists';
+  const segment = artist.slug || artist.name;
+  return `/artist/${encodeURIComponent(segment)}`;
+}
+
+export function artistsPath() {
+  return '/artists';
+}

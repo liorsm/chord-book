@@ -14,10 +14,14 @@ import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import HomeIcon from '@mui/icons-material/Home';
+import PeopleIcon from '@mui/icons-material/People';
 import ThemeToggle from './ThemeToggle';
 import { useThemeMode } from '../../ThemeContext';
 
-const navItems = [{ label: 'בית', path: '/', icon: <HomeIcon /> }];
+const navItems = [
+  { label: 'בית', path: '/', icon: <HomeIcon /> },
+  { label: 'אמנים', path: '/artists', icon: <PeopleIcon /> },
+];
 
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -36,8 +40,10 @@ export default function Header() {
       <AppBar
         position="sticky"
         elevation={0}
+        color="transparent"
         sx={{
           bgcolor: mode === 'dark' ? 'rgba(30, 27, 75, 0.85)' : 'rgba(255,255,255,0.9)',
+          color: 'text.primary',
           backdropFilter: 'blur(12px)',
           borderBottom: 1,
           borderColor: 'divider',
@@ -88,7 +94,12 @@ export default function Header() {
                 key={item.path}
                 component={Link}
                 to={item.path}
-                color={location.pathname === item.path ? 'primary' : 'inherit'}
+                color={
+                  location.pathname === item.path ||
+                  (item.path === '/artists' && location.pathname.startsWith('/artist/'))
+                    ? 'primary'
+                    : 'inherit'
+                }
                 startIcon={item.icon}
               >
                 {item.label}
@@ -113,7 +124,11 @@ export default function Header() {
                     navigate(item.path);
                     setDrawerOpen(false);
                   }}
-                  selected={location.pathname === item.path}
+                  selected={
+                    location.pathname === item.path ||
+                    (item.path === '/artists' &&
+                      location.pathname.startsWith('/artist/'))
+                  }
                 >
                   <Box sx={{ mr: 2, display: 'flex' }}>{item.icon}</Box>
                   <ListItemText primary={item.label} />

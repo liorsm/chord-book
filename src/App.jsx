@@ -7,6 +7,8 @@ import PlaylistPage from './pages/PlaylistPage';
 import FavoritesPage from './pages/FavoritesPage';
 import ManagePage from './pages/ManagePage';
 import EditSongPage from './pages/EditSongPage';
+import ArtistsPage from './pages/ArtistsPage';
+import ArtistPage from './pages/ArtistPage';
 import AdminGuard from './components/admin/AdminGuard';
 
 function App() {
@@ -14,6 +16,8 @@ function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="artists" element={<ArtistsPage />} />
+        <Route path="artist/:slug" element={<ArtistPage />} />
         <Route path="song/:slug" element={<SongPage />} />
         <Route path="manage" element={<ManagePage />} />
         <Route

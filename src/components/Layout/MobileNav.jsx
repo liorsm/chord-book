@@ -4,15 +4,26 @@ import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Box from '@mui/material/Box';
 import HomeIcon from '@mui/icons-material/Home';
+import PeopleIcon from '@mui/icons-material/People';
 import { useThemeMode } from '../../ThemeContext';
 
 export default function MobileNav() {
   const location = useLocation();
   const { mode } = useThemeMode();
 
-  if (location.pathname.startsWith('/song/') || location.pathname.startsWith('/manage')) {
+  const hideNav =
+    location.pathname.startsWith('/song/') ||
+    location.pathname.startsWith('/manage') ||
+    location.pathname.startsWith('/artist/');
+
+  if (hideNav) {
     return null;
   }
+
+  const navValue =
+    location.pathname === '/artists' || location.pathname.startsWith('/artist/')
+      ? '/artists'
+      : '/';
 
   return (
     <Box
@@ -37,13 +48,20 @@ export default function MobileNav() {
           borderColor: 'divider',
         }}
       >
-        <BottomNavigation value="/" showLabels>
+        <BottomNavigation value={navValue} showLabels>
           <BottomNavigationAction
             label="בית"
             value="/"
             icon={<HomeIcon />}
             component={Link}
             to="/"
+          />
+          <BottomNavigationAction
+            label="אמנים"
+            value="/artists"
+            icon={<PeopleIcon />}
+            component={Link}
+            to="/artists"
           />
         </BottomNavigation>
       </Paper>

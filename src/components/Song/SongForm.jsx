@@ -8,17 +8,21 @@ import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
 import ImageSearchIcon from '@mui/icons-material/ImageSearch';
 import YouTubeIcon from '@mui/icons-material/YouTube';
+import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import SaveIcon from '@mui/icons-material/Save';
 import ChordViewer from './ChordViewer';
 import DraggableImageFrame from './DraggableImageFrame';
 import { fetchArtistImage } from '../../utils/artistImage';
 import { fetchYouTubeVideoUrl } from '../../utils/youtube';
+import { fetchTab4uContent, tab4uImportUnavailableMessage } from '../../utils/tab4u';
 import {
   DEFAULT_ARTIST_IMAGE_POSITION_Y,
   artistImageBackgroundStyle,
   normalizeArtistImagePositionY,
 } from '../../utils/artistImagePosition';
 import { detectLanguage } from '../../utils/direction';
+import { useArtists } from '../../hooks/useArtists';
+import ArtistAutocomplete from './ArtistAutocomplete';
 
 export default function SongForm({
   initial = {},
@@ -38,6 +42,7 @@ export default function SongForm({
   const [youtubeUrl, setYoutubeUrl] = useState(initial.youtubeUrl || '');
   const [imageLoading, setImageLoading] = useState(false);
   const [youtubeLoading, setYoutubeLoading] = useState(false);
+  const [tab4uLoading, setTab4uLoading] = useState(false);
 
   useEffect(() => {
     setArtistImagePositionY(
@@ -55,6 +60,18 @@ export default function SongForm({
   };
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const { artists } = useArtists();
+
+  const handleArtistSelect = (selected) => {
+    if (selected.imageUrl) {
+      setArtistImageUrl(selected.imageUrl);
+      setArtistImagePositionY(
+        normalizeArtistImagePositionY(
+          selected.imagePositionY ?? DEFAULT_ARTIST_IMAGE_POSITION_Y
+        )
+      );
+    }
+  };
 
   const handleFetchYoutube = async () => {
     if (!title.trim() && !artist.trim()) return;
@@ -74,6 +91,24 @@ export default function SongForm({
       setError('שגיאה בחיפוש סרטון YouTube');
     } finally {
       setYoutubeLoading(false);
+    }
+  };
+
+  const handleImportTab4u = async () => {
+    if (!title.trim() && !artist.trim()) return;
+    setTab4uLoading(true);
+    setError('');
+    try {
+      const result = await fetchTab4uContent(title, artist);
+      if (result?.content) {
+        setContent(result.content);
+      } else {
+        setError(tab4uImportUnavailableMessage());
+      }
+    } catch {
+      setError('שגיאה בייבוא מ-TAB4U');
+    } finally {
+      setTab4uLoading(false);
     }
   };
 
@@ -139,12 +174,11 @@ export default function SongForm({
           sx={{ mb: 2 }}
         />
         <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-          <TextField
-            fullWidth
-            label="אמן"
+          <ArtistAutocomplete
+            artists={artists}
             value={artist}
-            onChange={(e) => setArtist(e.target.value)}
-            required
+            onChange={setArtist}
+            onArtistSelect={handleArtistSelect}
           />
           <Button
             variant="outlined"
@@ -192,17 +226,31 @@ export default function SongForm({
             חפש ביוטיוב
           </Button>
         </Box>
-        <TextField
-          fullWidth
-          label="מילים ואקורדים"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          multiline
-          rows={14}
-          required
-          placeholder="הדבק מילים עם אקורדים, למשל: [Am] או שורת אקורדים מעל מילים"
-          sx={{ mb: 3, fontFamily: 'monospace' }}
-        />
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, alignItems: 'flex-start' }}>
+          <TextField
+            fullWidth
+            label="מילים ואקורדים"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            multiline
+            rows={14}
+            required
+            placeholder="הדבק מילים עם אקורדים, או לחץ «ייבא מ-TAB4U» אחרי מילוי שם שיר ואמן"
+            helperText="לחץ «ייבא מ-TAB4U» לחיפוש לפי שם השיר והאמן"
+            sx={{ fontFamily: 'monospace' }}
+          />
+          <Button
+            variant="outlined"
+            onClick={handleImportTab4u}
+            disabled={tab4uLoading || (!title.trim() && !artist.trim())}
+            startIcon={
+              tab4uLoading ? <CircularProgress size={20} /> : <ContentPasteIcon />
+            }
+            sx={{ minWidth: 150, flexShrink: 0, alignSelf: 'flex-start', mt: 0.5 }}
+          >
+            ייבא מ-TAB4U
+          </Button>
+        </Box>
         <Button
           type="submit"
           variant="contained"
