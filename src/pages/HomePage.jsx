@@ -7,12 +7,15 @@ import SearchIcon from '@mui/icons-material/Search';
 import { motion } from 'framer-motion';
 import SearchBar from '../components/Search/SearchBar';
 import SongCard from '../components/Song/SongCard';
+import PlaylistCard from '../components/Playlist/PlaylistCard';
 import { useSongs } from '../hooks/useSongs';
+import { usePlaylists } from '../hooks/usePlaylists';
 import { useThemeMode } from '../ThemeContext';
 
 export default function HomePage() {
   const { mode } = useThemeMode();
-  const { songs, loading } = useSongs();
+  const { songs, loading: songsLoading } = useSongs();
+  const { playlists, loading: playlistsLoading } = usePlaylists();
 
   return (
     <Box>
@@ -71,7 +74,35 @@ export default function HomePage() {
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {loading ? (
+        {playlistsLoading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, mb: 2 }}>
+            <CircularProgress size={28} />
+          </Box>
+        ) : (
+          playlists.length > 0 && (
+            <Box sx={{ mb: 5 }}>
+              <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
+                פלייליסטים
+              </Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: 'repeat(2, 1fr)',
+                    md: 'repeat(4, 1fr)',
+                  },
+                  gap: 2,
+                }}
+              >
+                {playlists.map((playlist) => (
+                  <PlaylistCard key={playlist.id} playlist={playlist} />
+                ))}
+              </Box>
+            </Box>
+          )
+        )}
+
+        {songsLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
             <CircularProgress />
           </Box>

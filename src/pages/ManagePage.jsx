@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -34,6 +34,7 @@ import { usePlaylists } from '../hooks/usePlaylists';
 import { useAuth } from '../contexts/AuthContext';
 import ManageAuthPanel from '../components/admin/ManageAuthPanel';
 import { songPath, playlistPath, editSongPath } from '../utils/routes';
+import PlaylistCover from '../components/Playlist/PlaylistCover';
 
 function TabPanel({ children, value, index }) {
   if (value !== index) return null;
@@ -48,6 +49,7 @@ export default function ManagePage() {
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState('');
   const [newPlaylistName, setNewPlaylistName] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
   const [msg, setMsg] = useState('');
 
   const { songs, loading: songsLoading, deleteSong } = useSongs();
@@ -62,6 +64,11 @@ export default function ManagePage() {
   } = usePlaylists();
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
+
+  useEffect(() => {
+    setCoverImageUrl(selectedPlaylist?.coverImageUrl || '');
+  }, [selectedPlaylist?.id, selectedPlaylist?.coverImageUrl]);
+
   const playlistSongs = (selectedPlaylist?.songIds || [])
     .map((sid) => songs.find((s) => s.id === sid))
     .filter(Boolean);
@@ -84,6 +91,15 @@ export default function ManagePage() {
     await updatePlaylist(selectedPlaylist.id, { name: renameValue.trim() });
     setRenameOpen(false);
     setMsg('שם הפלייליסט עודכן');
+  };
+
+  const handleSaveCoverImage = async () => {
+    if (!selectedPlaylist) return;
+    const trimmed = coverImageUrl.trim();
+    await updatePlaylist(selectedPlaylist.id, {
+      coverImageUrl: trimmed || null,
+    });
+    setMsg(trimmed ? 'תמונת הרקע נשמרה' : 'תמונת הרקע הוסרה');
   };
 
   const loading = songsLoading || plLoading;
@@ -283,6 +299,34 @@ export default function ManagePage() {
                       setRenameOpen(true);
                     }}>
                       שנה שם
+                    </Button>
+                  </Box>
+
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                    תמונת רקע
+                  </Typography>
+                  <PlaylistCover
+                    coverColor={selectedPlaylist.coverColor}
+                    coverImageUrl={coverImageUrl}
+                    name={selectedPlaylist.name || selectedPlaylist.id}
+                    sx={{ mb: 2 }}
+                  />
+                  <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="כתובת תמונת רקע"
+                      placeholder="https://..."
+                      value={coverImageUrl}
+                      onChange={(e) => setCoverImageUrl(e.target.value)}
+                      helperText="התמונה מוצגת מתחת לגרדיאנט חצי שקוף. השאר ריק לגרדיאנט בלבד."
+                    />
+                    <Button
+                      variant="outlined"
+                      onClick={handleSaveCoverImage}
+                      sx={{ flexShrink: 0, alignSelf: 'flex-start', mt: 0.5 }}
+                    >
+                      שמור
                     </Button>
                   </Box>
 

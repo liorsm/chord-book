@@ -45,28 +45,29 @@ export function usePlaylists() {
   const [error, setError] = useState(null);
 
   const loadPlaylists = useCallback(async () => {
-    if (!isAdmin || !userId) {
-      setPlaylists([]);
-      setLoading(false);
-      return;
-    }
     setLoading(true);
     try {
-      const q = query(collection(db, 'playlists'), where('userId', '==', userId));
-      const snap = await getDocs(q);
+      const snap =
+        isAdmin && userId
+          ? await getDocs(
+              query(collection(db, 'playlists'), where('userId', '==', userId))
+            )
+          : await getDocs(collection(db, 'playlists'));
       const list = assignSlugsToPlaylists(snap.docs);
 
-      await Promise.all(
-        snap.docs.map(async (d, i) => {
-          if (!d.data().slug && list[i]?.slug) {
-            try {
-              await updateDoc(doc(db, 'playlists', d.id), { slug: list[i].slug });
-            } catch {
-              // ignore
+      if (isAdmin) {
+        await Promise.all(
+          snap.docs.map(async (d, i) => {
+            if (!d.data().slug && list[i]?.slug) {
+              try {
+                await updateDoc(doc(db, 'playlists', d.id), { slug: list[i].slug });
+              } catch {
+                // ignore
+              }
             }
-          }
-        })
-      );
+          })
+        );
+      }
 
       list.sort((a, b) => {
         const ta = a.createdAt?.seconds || 0;
@@ -185,7 +186,7 @@ export function usePlaylists() {
 
   return {
     playlists,
-    loading: loading || authLoading,
+    loading,
     error,
     loadPlaylists,
     createPlaylist,

@@ -10,7 +10,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SongCard from '../components/Song/SongCard';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useSongs } from '../hooks/useSongs';
-import { getPlaylistCoverBackground } from '../utils/artistImage';
+import PlaylistCover from '../components/Playlist/PlaylistCover';
 
 export default function PlaylistPage() {
   const { slug } = useParams();
@@ -66,18 +66,11 @@ export default function PlaylistPage() {
         </Button>
       </Box>
 
-      <Box
-        sx={{
-          height: 128,
-          borderRadius: 3,
-          backgroundImage: getPlaylistCoverBackground(
-            playlist.coverColor,
-            playlist.name || playlist.id
-          ),
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          mb: 3,
-        }}
+      <PlaylistCover
+        coverColor={playlist.coverColor}
+        coverImageUrl={playlist.coverImageUrl}
+        name={playlist.name || playlist.id}
+        sx={{ mb: 3 }}
       />
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
