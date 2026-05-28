@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   collection,
-  query,
-  where,
   getDocs,
   addDoc,
   updateDoc,
@@ -46,13 +44,9 @@ export function usePlaylists() {
 
   const loadPlaylists = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
-      const snap =
-        isAdmin && userId
-          ? await getDocs(
-              query(collection(db, 'playlists'), where('userId', '==', userId))
-            )
-          : await getDocs(collection(db, 'playlists'));
+      const snap = await getDocs(collection(db, 'playlists'));
       const list = assignSlugsToPlaylists(snap.docs);
 
       if (isAdmin) {
@@ -80,7 +74,7 @@ export function usePlaylists() {
     } finally {
       setLoading(false);
     }
-  }, [isAdmin, userId]);
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!authLoading) {

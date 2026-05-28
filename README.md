@@ -54,12 +54,14 @@ npm run preview
 
 **הגדרה חד-פעמית (חובה):** [Settings → Pages](https://github.com/liorsm/chord-book/settings/pages) → Source: **GitHub Actions**.
 
-**Secrets:** `VITE_ADMIN_UIDS` (חובה למנהל), `VITE_YOUTUBE_API_KEY` (אופציונלי).
+**Secrets:** `VITE_ADMIN_UIDS` (אופציונלי אם ה-UID כבר ב-`src/config/admin.js`), `VITE_YOUTUBE_API_KEY` (אופציונלי).
+
+**חשוב:** קובץ `.env` לא עולה ל-GitHub — בפרודקשן משתנים נכנסים בזמן `npm run build` דרך GitHub Actions Secrets. אם התחברות Google נכשלת, ודא ש-`liorsm.github.io` ב-[Authorized domains](https://console.firebase.google.com/project/chord-book-543fa/authentication/settings) ושכללי `firestore.rules` פורסמו ב-Firestore Console.
 
 ## Firebase
 
 - פרויקט: `chord-book-543fa`
-- Firestore: `songs` (קריאה ציבורית), `playlists` (מנהל בלבד)
+- Firestore: `songs` ו-`playlists` — קריאה ציבורית; כתיבה למנהל בלבד (לפי UID ב-`firestore.rules`)
 
 ## גיבוי
 

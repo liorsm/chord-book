@@ -1,5 +1,6 @@
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
+import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -15,7 +16,7 @@ import { useThemeMode } from '../ThemeContext';
 export default function HomePage() {
   const { mode } = useThemeMode();
   const { songs, loading: songsLoading } = useSongs();
-  const { playlists, loading: playlistsLoading } = usePlaylists();
+  const { playlists, loading: playlistsLoading, error: playlistsError } = usePlaylists();
 
   return (
     <Box>
@@ -74,6 +75,11 @@ export default function HomePage() {
       </Box>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
+        {playlistsError && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            לא ניתן לטעון פלייליסטים: {playlistsError}
+          </Alert>
+        )}
         {playlistsLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 4, mb: 2 }}>
             <CircularProgress size={28} />

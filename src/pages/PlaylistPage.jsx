@@ -10,11 +10,13 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SongCard from '../components/Song/SongCard';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useSongs } from '../hooks/useSongs';
+import { useAuth } from '../contexts/AuthContext';
 import PlaylistCover from '../components/Playlist/PlaylistCover';
 
 export default function PlaylistPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { getPlaylistBySlug, deletePlaylist, removeSongFromPlaylist, loading: plLoading } =
     usePlaylists();
   const { songs, loading: songsLoading, toggleFavorite } = useSongs();
@@ -52,18 +54,20 @@ export default function PlaylistPage() {
           </Typography>
           <Typography color="text.secondary">{playlistSongs.length} שירים</Typography>
         </Box>
-        <Button
-          color="error"
-          startIcon={<DeleteIcon />}
-          onClick={async () => {
-            if (confirm('למחוק את הפלייליסט?')) {
-              await deletePlaylist(playlist.id);
-              navigate('/');
-            }
-          }}
-        >
-          מחק
-        </Button>
+        {isAdmin && (
+          <Button
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={async () => {
+              if (confirm('למחוק את הפלייליסט?')) {
+                await deletePlaylist(playlist.id);
+                navigate('/');
+              }
+            }}
+          >
+            מחק
+          </Button>
+        )}
       </Box>
 
       <PlaylistCover
@@ -76,15 +80,20 @@ export default function PlaylistPage() {
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         {playlistSongs.map((song) => (
           <Box key={song.id} sx={{ position: 'relative' }}>
-            <SongCard song={song} onToggleFavorite={toggleFavorite} />
-            <IconButton
-              size="small"
-              color="error"
-              sx={{ position: 'absolute', top: 8, left: 8 }}
-              onClick={() => removeSongFromPlaylist(playlist.id, song.id)}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
+            <SongCard
+              song={song}
+              onToggleFavorite={isAdmin ? toggleFavorite : undefined}
+            />
+            {isAdmin && (
+              <IconButton
+                size="small"
+                color="error"
+                sx={{ position: 'absolute', top: 8, left: 8 }}
+                onClick={() => removeSongFromPlaylist(playlist.id, song.id)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
           </Box>
         ))}
         {playlistSongs.length === 0 && (

@@ -24,6 +24,7 @@ jobs:
       - run: npm run build
         env:
           VITE_YOUTUBE_API_KEY: ${{ secrets.VITE_YOUTUBE_API_KEY }}
+          VITE_ADMIN_UIDS: ${{ secrets.VITE_ADMIN_UIDS }}
 
       - run: cp dist/index.html dist/404.html
 
