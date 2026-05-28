@@ -37,6 +37,7 @@ import { useAuth } from '../contexts/AuthContext';
 import ManageAuthPanel from '../components/admin/ManageAuthPanel';
 import { songPath, playlistPath, editSongPath } from '../utils/routes';
 import PlaylistCover from '../components/Playlist/PlaylistCover';
+import PlaylistCoverImagePicker from '../components/Playlist/PlaylistCoverImagePicker';
 import {
   buildBackupExport,
   downloadBackupFile,
@@ -403,6 +404,10 @@ export default function ManagePage() {
                     name={selectedPlaylist.name || selectedPlaylist.id}
                     sx={{ mb: 2 }}
                   />
+                  <PlaylistCoverImagePicker
+                    coverImageUrl={coverImageUrl}
+                    onSelectUrl={setCoverImageUrl}
+                  />
                   <Box sx={{ display: 'flex', gap: 1, mb: 3 }}>
                     <TextField
                       size="small"
@@ -411,7 +416,7 @@ export default function ManagePage() {
                       placeholder="https://..."
                       value={coverImageUrl}
                       onChange={(e) => setCoverImageUrl(e.target.value)}
-                      helperText="התמונה מוצגת מתחת לגרדיאנט חצי שקוף. השאר ריק לגרדיאנט בלבד."
+                      helperText="נבחר מחיפוש או הדבק כתובת ידנית. השאר ריק לגרדיאנט בלבד."
                     />
                     <Button
                       variant="outlined"
