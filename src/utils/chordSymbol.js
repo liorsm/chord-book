@@ -35,7 +35,16 @@ export function stripOctaveMark(symbol) {
 }
 
 export function chordSymbolForParse(symbol) {
-  return stripOctaveMark(String(symbol).trim());
+  const trimmed = stripOctaveMark(String(symbol).trim());
+  if (/^[a-g]/.test(trimmed)) {
+    return trimmed[0].toUpperCase() + trimmed.slice(1);
+  }
+  return trimmed;
+}
+
+/** אות שורש אקורד חייבת להיות A–G גדולה (מונע זיהוי של "a", "am" במילים באנגלית) */
+function hasUppercaseChordRoot(str) {
+  return /^[A-G]/.test(String(str).trim());
 }
 
 function isValidTonalChord(symbol) {
@@ -52,9 +61,10 @@ function isNoteWithOctave(s) {
  * האם המחרוזת היא סמל אקורד תקף (מבוסס @tonaljs/chord).
  * תומך גם בסימון ישראלי נפוץ: A#4, Bb3 (= אקורד + ספרה, לא תו בודד).
  */
-export function isChordToken(str) {
+export function isChordToken(str, { allowLowercase = false } = {}) {
   const s = String(str).trim();
   if (!s || s.length > 32 || HEBREW_RE.test(s)) return false;
+  if (!allowLowercase && !hasUppercaseChordRoot(s)) return false;
 
   if (isNoteWithOctave(s)) {
     return isValidTonalChord(s.replace(/\d+$/, ''));

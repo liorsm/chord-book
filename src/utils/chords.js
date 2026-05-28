@@ -88,7 +88,7 @@ export function transformAllChords(content, transformFn) {
 
   let result = content.replace(/\[([^\]]+)\]/g, (match, chord) => {
     const trimmed = chord.trim();
-    if (!isChordToken(trimmed)) return match;
+    if (!isChordToken(trimmed, { allowLowercase: true })) return match;
     return `[${transformFn(trimmed)}]`;
   });
 
@@ -136,7 +136,7 @@ export function formatChordsToHtml(content, theme) {
 
   let html = escaped.replace(/\[([^\]]+)\]/g, (match, chord) => {
     const trimmed = chord.trim();
-    if (!isChordToken(trimmed)) return match;
+    if (!isChordToken(trimmed, { allowLowercase: true })) return match;
     const color = getChordColor(trimmed, theme);
     return `<span dir="ltr" class="chord" style="unicode-bidi:isolate;color:${color};font-weight:700">${trimmed}</span>`;
   });
@@ -156,7 +156,7 @@ export function extractUniqueChords(content) {
   const bracketRegex = /\[([^\]]+)\]/g;
   let m;
   while ((m = bracketRegex.exec(content)) !== null) {
-    if (isChordToken(m[1])) chords.add(m[1].trim());
+    if (isChordToken(m[1], { allowLowercase: true })) chords.add(m[1].trim());
   }
   const standaloneRegex = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
   while ((m = standaloneRegex.exec(content)) !== null) {

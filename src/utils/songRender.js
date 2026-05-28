@@ -62,7 +62,7 @@ export function formatLineWithChords(line, theme, { inlineLtr = false } = {}) {
       const bracket = part.match(/^\[([^\]]+)\]$/);
       if (bracket) {
         const trimmed = bracket[1].trim();
-        if (isChordToken(trimmed)) {
+        if (isChordToken(trimmed, { allowLowercase: true })) {
           return wrapChordHtml(chordSpan(trimmed), inlineLtr);
         }
         return escapeHtml(part);
