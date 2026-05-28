@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
@@ -29,12 +29,20 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
+import DownloadIcon from '@mui/icons-material/Download';
+import UploadIcon from '@mui/icons-material/Upload';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useAuth } from '../contexts/AuthContext';
 import ManageAuthPanel from '../components/admin/ManageAuthPanel';
 import { songPath, playlistPath, editSongPath } from '../utils/routes';
 import PlaylistCover from '../components/Playlist/PlaylistCover';
+import {
+  buildBackupExport,
+  downloadBackupFile,
+  importBackupToFirestore,
+  parseBackupFile,
+} from '../utils/backup';
 
 function TabPanel({ children, value, index }) {
   if (value !== index) return null;
@@ -43,7 +51,7 @@ function TabPanel({ children, value, index }) {
 
 export default function ManagePage() {
   const navigate = useNavigate();
-  const { loading: authLoading, signOut, authBusy } = useAuth();
+  const { loading: authLoading, signOut, authBusy, userId } = useAuth();
   const [tab, setTab] = useState(0);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -51,8 +59,16 @@ export default function ManagePage() {
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [msg, setMsg] = useState('');
+  const [msgSeverity, setMsgSeverity] = useState('success');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const importInputRef = useRef(null);
 
-  const { songs, loading: songsLoading, deleteSong } = useSongs();
+  const notify = (text, severity = 'success') => {
+    setMsg(text);
+    setMsgSeverity(severity);
+  };
+
+  const { songs, loading: songsLoading, deleteSong, loadSongs } = useSongs();
   const {
     playlists,
     loading: plLoading,
@@ -61,6 +77,7 @@ export default function ManagePage() {
     deletePlaylist,
     removeSongFromPlaylist,
     moveSongInPlaylist,
+    loadPlaylists,
   } = usePlaylists();
 
   const selectedPlaylist = playlists.find((p) => p.id === selectedPlaylistId);
@@ -76,21 +93,21 @@ export default function ManagePage() {
   const handleDeleteSong = async (song) => {
     if (!confirm(`למחוק את "${song.title}"?`)) return;
     await deleteSong(song.id);
-    setMsg('השיר נמחק');
+    notify('השיר נמחק');
   };
 
   const handleDeletePlaylist = async (pl) => {
     if (!confirm(`למחוק את הפלייליסט "${pl.name}"?`)) return;
     await deletePlaylist(pl.id);
     if (selectedPlaylistId === pl.id) setSelectedPlaylistId(null);
-    setMsg('הפלייליסט נמחק');
+    notify('הפלייליסט נמחק');
   };
 
   const handleRenamePlaylist = async () => {
     if (!selectedPlaylist || !renameValue.trim()) return;
     await updatePlaylist(selectedPlaylist.id, { name: renameValue.trim() });
     setRenameOpen(false);
-    setMsg('שם הפלייליסט עודכן');
+    notify('שם הפלייליסט עודכן');
   };
 
   const handleSaveCoverImage = async () => {
@@ -99,7 +116,41 @@ export default function ManagePage() {
     await updatePlaylist(selectedPlaylist.id, {
       coverImageUrl: trimmed || null,
     });
-    setMsg(trimmed ? 'תמונת הרקע נשמרה' : 'תמונת הרקע הוסרה');
+    notify(trimmed ? 'תמונת הרקע נשמרה' : 'תמונת הרקע הוסרה');
+  };
+
+  const handleExportBackup = () => {
+    downloadBackupFile(buildBackupExport(songs, playlists));
+    notify('קובץ הגיבוי הורד למחשב');
+  };
+
+  const handleImportBackup = async (file) => {
+    if (
+      !confirm(
+        'לייבא גיבוי מקובץ JSON?\nרשומות שכבר קיימות (לפי מזהה, slug או שם) לא יוכפלו.'
+      )
+    ) {
+      return;
+    }
+    setBackupBusy(true);
+    try {
+      const text = await file.text();
+      const backup = parseBackupFile(text);
+      const result = await importBackupToFirestore(backup, {
+        existingSongs: songs,
+        existingPlaylists: playlists,
+        userId,
+      });
+      await Promise.all([loadSongs(), loadPlaylists()]);
+      notify(
+        `ייבוא הושלם: נוספו ${result.songsAdded} שירים ו-${result.playlistsAdded} פלייליסטים. ` +
+          `דולגו ${result.songsSkipped} שירים ו-${result.playlistsSkipped} פלייליסטים קיימים.`
+      );
+    } catch (err) {
+      notify(err.message || 'שגיאה בייבוא הגיבוי', 'error');
+    } finally {
+      setBackupBusy(false);
+    }
   };
 
   const loading = songsLoading || plLoading;
@@ -150,10 +201,51 @@ export default function ManagePage() {
       </Box>
 
       {msg && (
-        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMsg('')}>
+        <Alert severity={msgSeverity} sx={{ mb: 2 }} onClose={() => setMsg('')}>
           {msg}
         </Alert>
       )}
+
+      <Paper sx={{ p: 2, mb: 2, borderRadius: 3 }}>
+        <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+          גיבוי ושחזור
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          ייצוא וייבוא של כל השירים והפלייליסטים. בייבוא, רשומות שכבר קיימות לא
+          יוכפלו.
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+          <Button
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            disabled={backupBusy || loading}
+            onClick={handleExportBackup}
+          >
+            הורד גיבוי
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={
+              backupBusy ? <CircularProgress size={18} /> : <UploadIcon />
+            }
+            disabled={backupBusy || loading}
+            onClick={() => importInputRef.current?.click()}
+          >
+            ייבא גיבוי
+          </Button>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json,.json"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              if (file) handleImportBackup(file);
+            }}
+          />
+        </Box>
+      </Paper>
 
       <Paper sx={{ borderRadius: 3 }}>
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="fullWidth">
@@ -241,7 +333,7 @@ export default function ManagePage() {
                     const id = await createPlaylist(newPlaylistName.trim());
                     setNewPlaylistName('');
                     setSelectedPlaylistId(id);
-                    setMsg('פלייליסט נוצר');
+                    notify('פלייליסט נוצר');
                   }}
                 >
                   צור
