@@ -2,11 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // החלף ב-UID שלך מ-Firebase Authentication (מוצג בדף /manage אחרי התחברות)
     function isAdmin() {
       return request.auth != null
         && request.auth.uid in [
-          'REPLACE_WITH_YOUR_FIREBASE_UID'
+          'xFWRzoBGgRc2UlBPKLW2fqMFsm13'
         ];
     }
 
