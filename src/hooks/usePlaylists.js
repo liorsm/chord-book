@@ -39,13 +39,17 @@ function assignSlugsToPlaylists(docs) {
 }
 
 export function usePlaylists() {
-  const { userId, loading: authLoading } = useAuth();
+  const { userId, isAdmin, loading: authLoading } = useAuth();
   const [playlists, setPlaylists] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadPlaylists = useCallback(async () => {
-    if (!userId) return;
+    if (!isAdmin || !userId) {
+      setPlaylists([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const q = query(collection(db, 'playlists'), where('userId', '==', userId));
@@ -75,13 +79,19 @@ export function usePlaylists() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [isAdmin, userId]);
 
   useEffect(() => {
-    if (!authLoading && userId) {
+    if (!authLoading) {
       loadPlaylists();
     }
-  }, [authLoading, userId, loadPlaylists]);
+  }, [authLoading, loadPlaylists]);
+
+  const requireAdmin = () => {
+    if (!isAdmin || !userId) {
+      throw new Error('נדרשת התחברות מנהל');
+    }
+  };
 
   const buildUniquePlaylistSlug = (name, excludePlaylistId = null) => {
     const excludeSlug = excludePlaylistId
@@ -95,6 +105,7 @@ export function usePlaylists() {
   };
 
   const createPlaylist = async (name) => {
+    requireAdmin();
     const coverColor =
       GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
     const slug = buildUniquePlaylistSlug(name);
@@ -111,6 +122,7 @@ export function usePlaylists() {
   };
 
   const updatePlaylist = async (id, data) => {
+    requireAdmin();
     const payload = { ...data };
     if (data.name !== undefined) {
       payload.slug = buildUniquePlaylistSlug(data.name, id);
@@ -120,11 +132,13 @@ export function usePlaylists() {
   };
 
   const deletePlaylist = async (id) => {
+    requireAdmin();
     await deleteDoc(doc(db, 'playlists', id));
     await loadPlaylists();
   };
 
   const addSongToPlaylist = async (playlistId, songId) => {
+    requireAdmin();
     const playlist = playlists.find((p) => p.id === playlistId);
     if (!playlist || playlist.songIds?.includes(songId)) return;
     const songIds = [...(playlist.songIds || []), songId];
@@ -132,6 +146,7 @@ export function usePlaylists() {
   };
 
   const removeSongFromPlaylist = async (playlistId, songId) => {
+    requireAdmin();
     const playlist = playlists.find((p) => p.id === playlistId);
     if (!playlist) return;
     const songIds = (playlist.songIds || []).filter((sid) => sid !== songId);
@@ -139,10 +154,12 @@ export function usePlaylists() {
   };
 
   const reorderPlaylistSongs = async (playlistId, songIds) => {
+    requireAdmin();
     await updatePlaylist(playlistId, { songIds });
   };
 
   const moveSongInPlaylist = async (playlistId, fromIndex, direction) => {
+    requireAdmin();
     const playlist = playlists.find((p) => p.id === playlistId);
     if (!playlist) return;
     const ids = [...(playlist.songIds || [])];

@@ -278,9 +278,11 @@ export default function ActionBar({
           )}
         </SquareBtn>
 
-        <SquareBtn onClick={onAddToPlaylist}>
-          <PlaylistAddIcon fontSize="small" />
-        </SquareBtn>
+        {onAddToPlaylist && (
+          <SquareBtn onClick={onAddToPlaylist}>
+            <PlaylistAddIcon fontSize="small" />
+          </SquareBtn>
+        )}
 
         {hasYouTube && (
           <SquareBtn active={youtubeOpen} onClick={onToggleYouTube}>

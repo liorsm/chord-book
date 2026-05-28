@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   collection,
   query,
-  where,
   orderBy,
   getDocs,
   addDoc,
@@ -39,36 +38,32 @@ function assignSlugsToSongs(docs) {
 }
 
 export function useSongs() {
-  const { userId, loading: authLoading } = useAuth();
+  const { userId, isAdmin, loading: authLoading } = useAuth();
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const loadSongs = useCallback(async () => {
-    if (!userId) return;
     setLoading(true);
     setError(null);
     try {
-      const q = query(
-        collection(db, 'songs'),
-        where('userId', '==', userId),
-        orderBy('updatedAt', 'desc')
-      );
+      const q = query(collection(db, 'songs'), orderBy('updatedAt', 'desc'));
       const snap = await getDocs(q);
       const list = assignSlugsToSongs(snap.docs);
 
-      // שמירת slug לשירים ישנים בלי slug
-      await Promise.all(
-        snap.docs.map(async (d, i) => {
-          if (!d.data().slug && list[i]?.slug) {
-            try {
-              await updateDoc(doc(db, 'songs', d.id), { slug: list[i].slug });
-            } catch {
-              // ignore
+      if (isAdmin) {
+        await Promise.all(
+          snap.docs.map(async (d, i) => {
+            if (!d.data().slug && list[i]?.slug) {
+              try {
+                await updateDoc(doc(db, 'songs', d.id), { slug: list[i].slug });
+              } catch {
+                // ignore
+              }
             }
-          }
-        })
-      );
+          })
+        );
+      }
 
       setSongs(list);
     } catch (err) {
@@ -76,13 +71,19 @@ export function useSongs() {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [isAdmin]);
 
   useEffect(() => {
-    if (!authLoading && userId) {
+    if (!authLoading) {
       loadSongs();
     }
-  }, [authLoading, userId, loadSongs]);
+  }, [authLoading, loadSongs]);
+
+  const requireAdmin = () => {
+    if (!isAdmin || !userId) {
+      throw new Error('נדרשת התחברות מנהל');
+    }
+  };
 
   const buildUniqueSongSlug = (title, artist, excludeSongId = null) => {
     const excludeSlug = excludeSongId
@@ -104,6 +105,7 @@ export function useSongs() {
     artistImagePositionY,
     youtubeUrl,
   }) => {
+    requireAdmin();
     const language = detectLanguage(content + title + artist);
     const slug = buildUniqueSongSlug(title, artist);
     const newSong = {
@@ -125,11 +127,11 @@ export function useSongs() {
     };
     const ref = await addDoc(collection(db, 'songs'), newSong);
     await loadSongs();
-    const created = { id: ref.id, ...newSong, slug };
-    return created;
+    return { id: ref.id, ...newSong, slug };
   };
 
   const updateSong = async (id, data) => {
+    requireAdmin();
     const payload = { ...data, updatedAt: serverTimestamp() };
     if (data.title !== undefined || data.artist !== undefined) {
       const song = songs.find((s) => s.id === id);
@@ -152,11 +154,13 @@ export function useSongs() {
   };
 
   const deleteSong = async (id) => {
+    requireAdmin();
     await deleteDoc(doc(db, 'songs', id));
     await loadSongs();
   };
 
   const toggleFavorite = async (id) => {
+    requireAdmin();
     const song = songs.find((s) => s.id === id);
     if (!song) return;
     await updateSong(id, { isFavorite: !song.isFavorite });
@@ -189,5 +193,6 @@ export function useSongs() {
     toggleFavorite,
     getSongById,
     getSongBySlug,
+    isAdmin,
   };
 }

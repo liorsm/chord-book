@@ -4,24 +4,15 @@ import BottomNavigation from '@mui/material/BottomNavigation';
 import BottomNavigationAction from '@mui/material/BottomNavigationAction';
 import Box from '@mui/material/Box';
 import HomeIcon from '@mui/icons-material/Home';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import SettingsIcon from '@mui/icons-material/Settings';
 import { useThemeMode } from '../../ThemeContext';
 
 export default function MobileNav() {
   const location = useLocation();
   const { mode } = useThemeMode();
 
-  if (location.pathname.startsWith('/song/')) return null;
-
-  const value = location.pathname.startsWith('/manage')
-    ? '/manage'
-    : location.pathname === '/favorites'
-      ? '/favorites'
-      : location.pathname === '/add'
-        ? '/add'
-        : '/';
+  if (location.pathname.startsWith('/song/') || location.pathname.startsWith('/manage')) {
+    return null;
+  }
 
   return (
     <Box
@@ -46,34 +37,13 @@ export default function MobileNav() {
           borderColor: 'divider',
         }}
       >
-        <BottomNavigation value={value} showLabels>
+        <BottomNavigation value="/" showLabels>
           <BottomNavigationAction
             label="בית"
             value="/"
             icon={<HomeIcon />}
             component={Link}
             to="/"
-          />
-          <BottomNavigationAction
-            label="מועדפים"
-            value="/favorites"
-            icon={<FavoriteIcon />}
-            component={Link}
-            to="/favorites"
-          />
-          <BottomNavigationAction
-            label="הוסף"
-            value="/add"
-            icon={<AddCircleIcon color="primary" />}
-            component={Link}
-            to="/add"
-          />
-          <BottomNavigationAction
-            label="ניהול"
-            value="/manage"
-            icon={<SettingsIcon />}
-            component={Link}
-            to="/manage"
           />
         </BottomNavigation>
       </Paper>

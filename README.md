@@ -6,10 +6,40 @@
 
 ```bash
 npm install
+cp .env.example .env
+# ערוך .env והוסף VITE_ADMIN_UIDS אחרי שלב ההרשאה למטה
 npm run dev
 ```
 
-פתח [http://localhost:5173](http://localhost:5173)
+פתח [http://localhost:5173/chord-book/](http://localhost:5173/chord-book/) (או הנתיב ש-Vite מציג).
+
+**ניהול (מנהל בלבד):** [http://localhost:5173/chord-book/manage](http://localhost:5173/chord-book/manage)
+
+## מודל האתר
+
+| מבקר | מנהל (`/manage` + Google) |
+|------|---------------------------|
+| צפייה בשירים | הוספה, עריכה, מחיקה |
+| חיפוש, טרנספוז, גלילה | פלייליסטים, מועדפים |
+| ללא התחברות | התחברות Google בדף הניהול בלבד |
+
+השירים ציבוריים לקריאה. כתיבה ל-Firestore מותרת רק למנהל (לפי UID).
+
+## הגדרת מנהל (פעם אחת)
+
+1. [Authentication → Google](https://console.firebase.google.com/project/chord-book-543fa/authentication/providers) — הפעל **Google**.
+2. [Authorized domains](https://console.firebase.google.com/project/chord-book-543fa/authentication/settings) — `localhost`, `liorsm.github.io`.
+3. העלה את `firestore.rules` לפרויקט (החלף `REPLACE_WITH_YOUR_FIREBASE_UID` ב-UID שלך):
+   - Firebase Console → Firestore → Rules → הדבק מתוך `firestore.rules`
+4. גלוש ל-`/manage` → **התחבר עם Google**.
+5. אם מוצג "אינו מורשה" — העתק את ה-**UID** מהמסך.
+6. הוסף את ה-UID:
+   - מקומית: `.env` → `VITE_ADMIN_UIDS=ה-UID-שלך`
+   - GitHub Pages: Repository → Settings → Secrets → `VITE_ADMIN_UIDS`
+   - `firestore.rules` → החלף את ה-placeholder באותו UID → פרסם שוב ב-Firestore Console
+7. רענן `/manage` — אמור להיפתח ממשק הניהול.
+
+ניתן לכבות **Anonymous** ב-Authentication (לא בשימוש יותר).
 
 ## בנייה
 
@@ -22,35 +52,15 @@ npm run preview
 
 האתר מתפרסם אוטומטית ל-[liorsm.github.io/chord-book](https://liorsm.github.io/chord-book/) בכל push ל-`main`.
 
-**הגדרה חד-פעמית (חובה):** [Settings → Pages](https://github.com/liorsm/chord-book/settings/pages) → Build and deployment → Source: **GitHub Actions** (לא `Deploy from a branch` / `main`).
+**הגדרה חד-פעמית (חובה):** [Settings → Pages](https://github.com/liorsm/chord-book/settings/pages) → Source: **GitHub Actions**.
 
-אם ה-Source נשאר על `main`, האתר יציג את קוד המקור (`/src/main.jsx`) ולא את האפליקציה הבנויה — דף ריק או ישן.
-
-**גיבוי (ענף gh-pages):** אם מעדיפים "Deploy from a branch" — ב-Settings → Actions → General אפשר **Read and write permissions**, הרץ ידנית את workflow `Deploy to gh-pages branch`, ואז ב-Pages בחר ענף **gh-pages**.
-
-**Firebase:** ב-Authentication → Authorized domains הוסף `liorsm.github.io`.
-
-אופציונלי — חיפוש YouTube בפרודקשן: הגדר secret `VITE_YOUTUBE_API_KEY` ב-Repository → Settings → Secrets and variables → Actions.
-
-## גיבוי
-
-הגרסה הישנה (HTML יחיד) נשמרה ב-`index.legacy.html`.
+**Secrets:** `VITE_ADMIN_UIDS` (חובה למנהל), `VITE_YOUTUBE_API_KEY` (אופציונלי).
 
 ## Firebase
 
 - פרויקט: `chord-book-543fa`
-- Auth: אנונימי (ברירת מחדל) + **Google** לסנכרון בין מכשירים
-- Firestore: `songs`, `playlists`
+- Firestore: `songs` (קריאה ציבורית), `playlists` (מנהל בלבד)
 
-### הגדרה חד-פעמית ב-Firebase Console
+## גיבוי
 
-1. [Authentication → Sign-in method](https://console.firebase.google.com/project/chord-book-543fa/authentication/providers) → הפעל **Google**.
-2. [Authentication → Settings → Authorized domains](https://console.firebase.google.com/project/chord-book-543fa/authentication/settings) → ודא שיש `localhost` ו-`liorsm.github.io`.
-3. ודא ש-**Anonymous** עדיין מופעל (משתמשים שלא התחברו).
-4. Firestore Rules: קריאה/כתיבה רק למסמכים עם `userId == request.auth.uid`.
-
-### סנכרון בין מכשירים
-
-לחץ **התחבר** (Google) בכל מכשיר עם **אותו חשבון Google**. השירים נשמרים לפי `userId` — אחרי התחברות אותו חשבון = אותה ספרייה.
-
-במכשיר שבו כבר הוספת שירים כאורח: התחבר שם קודם — החשבון האנונימי יקושר ל-Google והשירים יישארו.
+הגרסה הישנה (HTML יחיד) נשמרה ב-`index.legacy.html`.

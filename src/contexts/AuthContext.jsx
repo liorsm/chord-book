@@ -1,22 +1,21 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
-  signInAnonymously,
   onAuthStateChanged,
   getRedirectResult,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import { isAdminUid } from '../config/admin';
 import { signInWithGoogleAccount, googleAuthErrorMessage } from '../utils/googleAuth';
 
 const AuthContext = createContext({
   userId: null,
-  isAnonymous: true,
+  isAdmin: false,
   displayName: null,
   email: null,
   photoURL: null,
   loading: true,
   authBusy: false,
-  error: null,
   authNotice: null,
   clearAuthNotice: () => {},
   signInWithGoogle: async () => ({ ok: true }),
@@ -25,25 +24,23 @@ const AuthContext = createContext({
 
 export function AuthProvider({ children }) {
   const [userId, setUserId] = useState(null);
-  const [isAnonymous, setIsAnonymous] = useState(true);
   const [displayName, setDisplayName] = useState(null);
   const [email, setEmail] = useState(null);
   const [photoURL, setPhotoURL] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authBusy, setAuthBusy] = useState(false);
-  const [error, setError] = useState(null);
   const [authNotice, setAuthNotice] = useState(null);
 
+  const isAdmin = useMemo(() => isAdminUid(userId), [userId]);
+
   const applyUser = useCallback((user) => {
-    if (user) {
+    if (user && !user.isAnonymous) {
       setUserId(user.uid);
-      setIsAnonymous(user.isAnonymous);
       setDisplayName(user.displayName);
       setEmail(user.email);
       setPhotoURL(user.photoURL);
     } else {
       setUserId(null);
-      setIsAnonymous(true);
       setDisplayName(null);
       setEmail(null);
       setPhotoURL(null);
@@ -66,39 +63,12 @@ export function AuthProvider({ children }) {
 
     finishRedirect();
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (user) => {
-        if (user) {
-          applyUser(user);
-          setError(null);
-          setLoading(false);
-          return;
-        }
-
-        try {
-          const cred = await signInAnonymously(auth);
-          if (!cancelled) {
-            applyUser(cred.user);
-            setError(null);
-          }
-        } catch (err) {
-          if (!cancelled) {
-            setError(err.message);
-          }
-        } finally {
-          if (!cancelled) {
-            setLoading(false);
-          }
-        }
-      },
-      (err) => {
-        if (!cancelled) {
-          setError(err.message);
-          setLoading(false);
-        }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!cancelled) {
+        applyUser(user);
+        setLoading(false);
       }
-    );
+    });
 
     return () => {
       cancelled = true;
@@ -123,12 +93,8 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(async () => {
     setAuthBusy(true);
-    setError(null);
     try {
       await firebaseSignOut(auth);
-    } catch (err) {
-      setError(err.message);
-      throw err;
     } finally {
       setAuthBusy(false);
     }
@@ -138,13 +104,12 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         userId,
-        isAnonymous,
+        isAdmin,
         displayName,
         email,
         photoURL,
         loading,
         authBusy,
-        error,
         authNotice,
         clearAuthNotice,
         signInWithGoogle,

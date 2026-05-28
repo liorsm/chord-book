@@ -28,8 +28,11 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
+import { useAuth } from '../contexts/AuthContext';
+import ManageAuthPanel from '../components/admin/ManageAuthPanel';
 import { songPath, playlistPath, editSongPath } from '../utils/routes';
 
 function TabPanel({ children, value, index }) {
@@ -39,6 +42,7 @@ function TabPanel({ children, value, index }) {
 
 export default function ManagePage() {
   const navigate = useNavigate();
+  const { loading: authLoading, signOut, authBusy } = useAuth();
   const [tab, setTab] = useState(0);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState(null);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -84,14 +88,50 @@ export default function ManagePage() {
 
   const loading = songsLoading || plLoading;
 
+  if (authLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 10 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" fontWeight={800} gutterBottom>
-        ניהול תוכן
-      </Typography>
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        עריכה, מחיקה וסידור שירים ופלייליסטים
-      </Typography>
+      <ManageAuthPanel>
+        <>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 2,
+          mb: 3,
+        }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={800} gutterBottom>
+            ניהול תוכן
+          </Typography>
+          <Typography color="text.secondary">
+            עריכה, מחיקה וסידור שירים ופלייליסטים
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/add')}>
+            הוסף שיר
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<LogoutIcon />}
+            onClick={signOut}
+            disabled={authBusy}
+          >
+            התנתק
+          </Button>
+        </Box>
+      </Box>
 
       {msg && (
         <Alert severity="success" sx={{ mb: 2 }} onClose={() => setMsg('')}>
@@ -318,6 +358,8 @@ export default function ManagePage() {
           </Button>
         </DialogActions>
       </Dialog>
+        </>
+      </ManageAuthPanel>
     </Container>
   );
 }

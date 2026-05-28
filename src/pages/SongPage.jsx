@@ -13,6 +13,7 @@ import { parseYouTubeVideoId } from '../utils/youtube';
 import AddToPlaylistDialog from '../components/Song/AddToPlaylistDialog';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
+import { useAuth } from '../contexts/AuthContext';
 import { transposeContent } from '../utils/chords';
 import { detectLanguage } from '../utils/direction';
 
@@ -22,6 +23,7 @@ const MAX_SEMITONES = 6;
 export default function SongPage() {
   const { slug } = useParams();
   const { getSongBySlug, loading } = useSongs();
+  const { isAdmin } = useAuth();
   const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
 
   const song = getSongBySlug(slug);
@@ -96,7 +98,7 @@ export default function SongPage() {
         fontFamily={fontFamily}
         onFontSizeChange={setFontSize}
         onFontFamilyChange={setFontFamily}
-        onAddToPlaylist={() => setPlaylistDialogOpen(true)}
+        onAddToPlaylist={isAdmin ? () => setPlaylistDialogOpen(true) : undefined}
         onToggleDirection={toggleDirection}
         textDirection={directionOverride || (language === 'he' ? 'rtl' : 'ltr')}
         hasYouTube={!!youtubeVideoId}
@@ -129,22 +131,24 @@ export default function SongPage() {
         )}
       </Box>
 
-      <AddToPlaylistDialog
-        open={playlistDialogOpen}
-        onClose={() => setPlaylistDialogOpen(false)}
-        playlists={playlists}
-        onSelect={async (playlistId) => {
-          await addSongToPlaylist(playlistId, song.id);
-          setPlaylistDialogOpen(false);
-          setSnack('נוסף לפלייליסט!');
-        }}
-        onCreate={async (name) => {
-          const plId = await createPlaylist(name);
-          await addSongToPlaylist(plId, song.id);
-          setPlaylistDialogOpen(false);
-          setSnack('פלייליסט נוצר והשיר נוסף!');
-        }}
-      />
+      {isAdmin && (
+        <AddToPlaylistDialog
+          open={playlistDialogOpen}
+          onClose={() => setPlaylistDialogOpen(false)}
+          playlists={playlists}
+          onSelect={async (playlistId) => {
+            await addSongToPlaylist(playlistId, song.id);
+            setPlaylistDialogOpen(false);
+            setSnack('נוסף לפלייליסט!');
+          }}
+          onCreate={async (name) => {
+            const plId = await createPlaylist(name);
+            await addSongToPlaylist(plId, song.id);
+            setPlaylistDialogOpen(false);
+            setSnack('פלייליסט נוצר והשיר נוסף!');
+          }}
+        />
+      )}
 
       <Snackbar open={!!snack} autoHideDuration={3000} onClose={() => setSnack('')}>
         <Alert severity="success">{snack}</Alert>
