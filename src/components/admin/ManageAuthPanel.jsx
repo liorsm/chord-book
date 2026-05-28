@@ -13,7 +13,10 @@ export default function ManageAuthPanel({ children }) {
     isAdmin,
     displayName,
     email,
+    loading: authLoading,
     authBusy,
+    authNotice,
+    clearAuthNotice,
     signInWithGoogle,
     signOut,
   } = useAuth();
@@ -25,6 +28,15 @@ export default function ManageAuthPanel({ children }) {
     }
   };
 
+  if (authLoading) {
+    return (
+      <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
+        <CircularProgress sx={{ mb: 2 }} />
+        <Typography color="text.secondary">מסיים התחברות…</Typography>
+      </Paper>
+    );
+  }
+
   if (!userId) {
     return (
       <Paper sx={{ p: 4, borderRadius: 3, textAlign: 'center' }}>
@@ -34,6 +46,11 @@ export default function ManageAuthPanel({ children }) {
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           התחבר עם Google כדי לנהל שירים ופלייליסטים
         </Typography>
+        {authNotice && (
+          <Alert severity="warning" sx={{ mb: 2, textAlign: 'right' }} onClose={clearAuthNotice}>
+            {authNotice}
+          </Alert>
+        )}
         <Button
           variant="contained"
           size="large"

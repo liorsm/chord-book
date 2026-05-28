@@ -1,12 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   onAuthStateChanged,
-  getRedirectResult,
   signOut as firebaseSignOut,
+  setPersistence,
+  browserLocalPersistence,
 } from 'firebase/auth';
 import { auth } from '../firebase';
 import { isAdminUid } from '../config/admin';
 import { signInWithGoogleAccount, googleAuthErrorMessage } from '../utils/googleAuth';
+import { getRedirectResultOnce } from '../utils/authRedirect';
 
 const AuthContext = createContext({
   userId: null,
@@ -49,26 +51,37 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false;
+    let unsubscribe = () => {};
 
-    async function finishRedirect() {
+    async function initAuth() {
+      setLoading(true);
       try {
-        await getRedirectResult(auth);
+        await setPersistence(auth, browserLocalPersistence);
+      } catch {
+        // דפדפן ללא localStorage — onAuthStateChanged עדיין ינסה
+      }
+
+      try {
+        const result = await getRedirectResultOnce(auth);
+        if (!cancelled && result?.user) {
+          applyUser(result.user);
+        }
       } catch (err) {
         if (!cancelled) {
           const msg = googleAuthErrorMessage(err.code) || err.message;
           if (msg) setAuthNotice(msg);
         }
       }
+
+      unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (!cancelled) {
+          applyUser(user);
+          setLoading(false);
+        }
+      });
     }
 
-    finishRedirect();
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!cancelled) {
-        applyUser(user);
-        setLoading(false);
-      }
-    });
+    initAuth();
 
     return () => {
       cancelled = true;
@@ -78,6 +91,7 @@ export function AuthProvider({ children }) {
 
   const signInWithGoogle = useCallback(async () => {
     setAuthBusy(true);
+    setAuthNotice(null);
     try {
       await signInWithGoogleAccount();
       return { ok: true };
