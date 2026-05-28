@@ -237,7 +237,7 @@ export default function ActionBar({
     >
       {/* Tonality row */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }}>
-        <SquareBtn color="secondary" onClick={onTransposeDown} disabled={semitones <= -6}>
+        <SquareBtn color="secondary" onClick={onTransposeUp} disabled={semitones >= 6}>
           <ChevronRightIcon fontSize="small" />
         </SquareBtn>
 
@@ -259,7 +259,7 @@ export default function ActionBar({
           </Typography>
         </Box>
 
-        <SquareBtn color="secondary" onClick={onTransposeUp} disabled={semitones >= 6}>
+        <SquareBtn color="secondary" onClick={onTransposeDown} disabled={semitones <= -6}>
           <ChevronLeftIcon fontSize="small" />
         </SquareBtn>
       </Box>
