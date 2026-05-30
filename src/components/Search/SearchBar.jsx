@@ -19,10 +19,10 @@ export default function SearchBar({ songs = [], placeholder = 'חפש שיר א�
 
   return (
     <Paper
-      elevation={large ? 8 : 2}
+      elevation={0}
       sx={{
         p: 0.5,
-        borderRadius: '16px',
+        borderRadius: large ? '9999px' : '20px',
         bgcolor: 'background.paper',
       }}
     >
@@ -50,8 +50,8 @@ export default function SearchBar({ songs = [], placeholder = 'חפש שיר א�
             }}
             InputProps={{
               ...params.InputProps,
-              startAdornment: (
-                <InputAdornment position="start">
+              endAdornment: (
+                <InputAdornment position="end">
                   <SearchIcon color="primary" />
                 </InputAdornment>
               ),

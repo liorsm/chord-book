@@ -134,7 +134,17 @@ export default function Header() {
         </Toolbar>
       </AppBar>
 
-      <Drawer anchor="right" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        PaperProps={{
+          sx: {
+            borderStartEndRadius: 16,
+            borderEndEndRadius: 16,
+          },
+        }}
+      >
         <Box sx={{ width: 260, pt: 2 }}>
           <List>
             {navItems.map((item) => (

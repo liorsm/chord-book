@@ -44,16 +44,28 @@ export default function MobileNav() {
       }}
     >
       <Paper
-        elevation={8}
+        elevation={0}
         sx={{
           borderRadius: 4,
-          bgcolor: mode === 'dark' ? 'rgba(30, 27, 75, 0.95)' : 'rgba(255,255,255,0.95)',
-          backdropFilter: 'blur(12px)',
-          border: 1,
-          borderColor: 'divider',
+          overflow: 'hidden',
+          background:
+            mode === 'dark'
+              ? 'rgba(30, 27, 75, 0.45)'
+              : 'rgba(255, 255, 255, 0.35)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          border: '1px solid rgba(255, 255, 255, 0.45)',
+          boxShadow:
+            mode === 'dark'
+              ? '0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
+              : '0 8px 32px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
         }}
       >
-        <BottomNavigation value={navValue} showLabels>
+        <BottomNavigation
+          value={navValue}
+          showLabels
+          sx={{ bgcolor: 'transparent' }}
+        >
           <BottomNavigationAction
             label="בית"
             value="/"
