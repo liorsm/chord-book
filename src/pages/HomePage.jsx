@@ -2,19 +2,14 @@ import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
 import Alert from '@mui/material/Alert';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
-import SearchIcon from '@mui/icons-material/Search';
 import { motion } from 'framer-motion';
 import SearchBar from '../components/Search/SearchBar';
 import SongCard from '../components/Song/SongCard';
 import PlaylistCard from '../components/Playlist/PlaylistCard';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
-import { useThemeMode } from '../ThemeContext';
-
 export default function HomePage() {
-  const { mode } = useThemeMode();
   const { songs, loading: songsLoading } = useSongs();
   const { playlists, loading: playlistsLoading, error: playlistsError } = usePlaylists();
 
@@ -25,17 +20,32 @@ export default function HomePage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         sx={{
-          background:
-            mode === 'dark'
-              ? 'linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(26,0,51,0.9) 100%)'
-              : 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(243,232,255,0.95) 100%)',
+          position: 'relative',
+          overflow: 'hidden',
           py: { xs: 6, md: 10 },
           px: 2,
           textAlign: 'center',
           borderRadius: { md: 0 },
         }}
       >
-        <Container maxWidth="md">
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `url(${import.meta.env.BASE_URL}bg-hero.jpg)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            background:
+              'linear-gradient(to bottom, rgba(81, 181, 229, 0.5) 0%, rgba(74, 140, 230, 0.5) 35%, rgba(83, 86, 224, 0.5) 65%, rgba(125, 38, 223, 0.5) 100%);',
+          }}
+        />
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
           <Typography
             variant="h2"
             sx={{
@@ -44,8 +54,7 @@ export default function HomePage() {
               fontSize: { xs: '2rem', md: '3rem' },
               background: 'linear-gradient(135deg, #fff, #c4b5fd)',
               WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: mode === 'dark' ? 'transparent' : undefined,
-              color: mode === 'light' ? 'primary.dark' : undefined,
+              WebkitTextFillColor: 'transparent',
             }}
           >
             ChordBook
@@ -54,23 +63,14 @@ export default function HomePage() {
             variant="h6"
             sx={{
               mb: 4,
-              color: mode === 'dark' ? 'rgba(255,255,255,0.85)' : 'text.secondary',
+              color: 'rgba(255,255,255,0.9)',
             }}
           >
             אקורדים לשירים האהובים עליך
           </Typography>
-          <Box sx={{ maxWidth: 520, mx: 'auto', mb: 3 }}>
+          <Box sx={{ maxWidth: 520, mx: 'auto' }}>
             <SearchBar songs={songs} large placeholder="חפש שיר או אמן..." />
           </Box>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<SearchIcon />}
-            onClick={() => document.querySelector('input')?.focus()}
-            sx={{ px: 4 }}
-          >
-            חפש שיר
-          </Button>
         </Container>
       </Box>
 

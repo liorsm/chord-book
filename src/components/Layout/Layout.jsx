@@ -27,7 +27,6 @@ export default function Layout() {
         sx={{
           flex: 1,
           pb: { xs: 10, md: 4 },
-          pt: { xs: 1, md: 2 },
         }}
       >
         <Outlet />

@@ -12,7 +12,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
 import MenuIcon from '@mui/icons-material/Menu';
-import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import HomeIcon from '@mui/icons-material/Home';
 import PeopleIcon from '@mui/icons-material/People';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -70,6 +69,10 @@ export default function Header() {
           backdropFilter: 'blur(12px)',
           borderBottom: 1,
           borderColor: 'divider',
+          boxShadow:
+            mode === 'dark'
+              ? '0 4px 12px rgba(0, 0, 0, 0.3)'
+              : '0 2px 8px rgba(0, 0, 0, 0.08)',
         }}
       >
         <Toolbar sx={{ justifyContent: 'space-between', gap: 2 }}>
@@ -95,7 +98,6 @@ export default function Header() {
               justifyContent: { xs: 'center', md: 'flex-start' },
             }}
           >
-            <MusicNoteIcon sx={{ color: 'primary.main', fontSize: 32 }} />
             <Typography
               variant="h5"
               sx={{

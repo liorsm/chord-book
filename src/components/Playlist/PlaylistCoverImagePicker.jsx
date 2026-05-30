@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import ImageSearchIcon from '@mui/icons-material/ImageSearch';
+import ImageOptionsGrid from '../common/ImageOptionsGrid';
 import { fetchCoverImageOptions } from '../../utils/coverImageSearch';
 
 export default function PlaylistCoverImagePicker({ coverImageUrl, onSelectUrl }) {
@@ -48,7 +49,7 @@ export default function PlaylistCoverImagePicker({ coverImageUrl, onSelectUrl })
               handleSearch();
             }
           }}
-          helperText="מאגר חינמי (Openverse). לחץ «חפש» לקבלת עד 4 אפשרויות."
+          helperText="Openverse, ויקיפדיה, Wikimedia Commons. לחץ «חפש» לקבלת עד 4 אפשרויות."
         />
         <Button
           variant="outlined"
@@ -68,53 +69,12 @@ export default function PlaylistCoverImagePicker({ coverImageUrl, onSelectUrl })
       )}
 
       {options.length > 0 && (
-        <>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
-            בחר תמונה — הכתובת תתמלא אוטומטית בשדה למטה
-          </Typography>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
-              gap: 1,
-              mb: 1,
-            }}
-          >
-            {options.map((opt) => {
-              const selected = coverImageUrl === opt.url;
-              return (
-                <Box
-                  key={opt.id}
-                  component="button"
-                  type="button"
-                  onClick={() => onSelectUrl(opt.url)}
-                  title={opt.title}
-                  sx={{
-                    aspectRatio: '1',
-                    p: 0,
-                    border: 2,
-                    borderColor: selected ? 'primary.main' : 'divider',
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    bgcolor: 'action.hover',
-                    backgroundImage: `url(${opt.thumbnail})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    transition: 'border-color 0.15s, transform 0.15s',
-                    '&:hover': {
-                      borderColor: 'primary.light',
-                      transform: 'scale(1.02)',
-                    },
-                  }}
-                />
-              );
-            })}
-          </Box>
-          <Typography variant="caption" color="text.disabled" display="block" sx={{ mb: 1 }}>
-            תמונות מ-Openverse (רישיון חופשי). ייתכן צורך בייחוס לפי הרישיון.
-          </Typography>
-        </>
+        <ImageOptionsGrid
+          options={options}
+          selectedUrl={coverImageUrl}
+          onSelect={onSelectUrl}
+          attributionNote="מקורות: Openverse, ויקיפדיה, Wikimedia Commons. ייתכן צורך בייחוס לפי הרישיון."
+        />
       )}
     </Box>
   );

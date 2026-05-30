@@ -12,7 +12,8 @@ import ContentPasteIcon from '@mui/icons-material/ContentPaste';
 import SaveIcon from '@mui/icons-material/Save';
 import ChordViewer from './ChordViewer';
 import DraggableImageFrame from './DraggableImageFrame';
-import { fetchArtistImage } from '../../utils/artistImage';
+import { fetchArtistImageOptions } from '../../utils/coverImageSearch';
+import ImageOptionsGrid from '../common/ImageOptionsGrid';
 import { fetchYouTubeVideoUrl } from '../../utils/youtube';
 import { fetchTab4uContent, tab4uImportUnavailableMessage } from '../../utils/tab4u';
 import {
@@ -45,6 +46,8 @@ export default function SongForm({
   );
   const [youtubeUrl, setYoutubeUrl] = useState(initial.youtubeUrl || '');
   const [imageLoading, setImageLoading] = useState(false);
+  const [imageOptions, setImageOptions] = useState([]);
+  const [imageSearchError, setImageSearchError] = useState('');
   const [youtubeLoading, setYoutubeLoading] = useState(false);
   const [tab4uLoading, setTab4uLoading] = useState(false);
 
@@ -127,17 +130,25 @@ export default function SongForm({
     }
   };
 
+  const handleSelectArtistImage = (url) => {
+    setArtistImageUrl(url);
+    setArtistImagePositionY(DEFAULT_ARTIST_IMAGE_POSITION_Y);
+    setImageSearchError('');
+  };
+
   const handleFetchImage = async () => {
     if (!artist.trim()) return;
     setImageLoading(true);
-    setError('');
+    setImageSearchError('');
+    setImageOptions([]);
     try {
-      const url = await fetchArtistImage(artist);
-      setArtistImageUrl(url || '');
-      if (url) setArtistImagePositionY(DEFAULT_ARTIST_IMAGE_POSITION_Y);
-      if (!url) setError('לא נמצאה תמונה. יוצג רקע gradient.');
+      const results = await fetchArtistImageOptions(artist, 4);
+      setImageOptions(results);
+      if (results.length === 0) {
+        setImageSearchError('לא נמצאו תמונות. יוצג רקע gradient, או הדבק כתובת ידנית.');
+      }
     } catch {
-      setError('שגיאה בחיפוש תמונה');
+      setImageSearchError('שגיאה בחיפוש תמונות. נסה שוב.');
     } finally {
       setImageLoading(false);
     }
@@ -201,11 +212,21 @@ export default function SongForm({
             onClick={handleFetchImage}
             disabled={imageLoading || !artist.trim()}
             startIcon={imageLoading ? <CircularProgress size={20} /> : <ImageSearchIcon />}
-            sx={{ minWidth: 140, flexShrink: 0 }}
+            sx={{ minWidth: 140, flexShrink: 0, alignSelf: 'flex-start', mt: 0.5 }}
           >
             חפש תמונה
           </Button>
         </Box>
+        {imageSearchError && (
+          <Typography variant="caption" color="error" display="block" sx={{ mb: 1, mt: -1 }}>
+            {imageSearchError}
+          </Typography>
+        )}
+        <ImageOptionsGrid
+          options={imageOptions}
+          selectedUrl={artistImageUrl}
+          onSelect={handleSelectArtistImage}
+        />
         {playlists && (
           <Box sx={{ mb: 2 }}>
             <PlaylistAutocomplete
@@ -222,7 +243,7 @@ export default function SongForm({
           value={artistImageUrl}
           onChange={(e) => handleImageUrlChange(e.target.value)}
           placeholder="https://..."
-          helperText="מתמלא אוטומטית בלחיצה על «חפש תמונה», או הדבק/ערוך כתובת בעצמך"
+          helperText="לחץ «חפש תמונה» לקבלת עד 4 אפשרויות, או הדבק/ערוך כתובת בעצמך"
           sx={{ mb: 2 }}
         />
         <DraggableImageFrame

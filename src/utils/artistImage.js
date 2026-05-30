@@ -5,25 +5,46 @@ const WIKI_ENDPOINTS = [
     `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`,
 ];
 
-export async function fetchArtistImage(artistName) {
-  if (!artistName?.trim()) return null;
+async function fetchWikipediaSummaryImage(buildUrl, artistName) {
+  const res = await fetch(buildUrl(artistName.trim()));
+  if (!res.ok) return null;
+  const data = await res.json();
+  return data.thumbnail?.source || data.originalimage?.source || null;
+}
 
-  for (const buildUrl of WIKI_ENDPOINTS) {
+/**
+ * @param {string} artistName
+ * @returns {Promise<Array<{ id: string, url: string, thumbnail: string, title: string, attribution: string }>>}
+ */
+export async function fetchWikipediaArtistImageOptions(artistName) {
+  if (!artistName?.trim()) return [];
+
+  const ids = ['wikipedia-he', 'wikipedia-en'];
+  const options = [];
+  const seen = new Set();
+
+  for (let i = 0; i < WIKI_ENDPOINTS.length; i++) {
     try {
-      const res = await fetch(buildUrl(artistName.trim()));
-      if (!res.ok) continue;
-      const data = await res.json();
-      if (data.thumbnail?.source) {
-        return data.thumbnail.source;
-      }
-      if (data.originalimage?.source) {
-        return data.originalimage.source;
-      }
+      const url = await fetchWikipediaSummaryImage(WIKI_ENDPOINTS[i], artistName);
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      options.push({
+        id: ids[i],
+        url,
+        thumbnail: url,
+        title: artistName.trim(),
+        attribution: 'ויקיפדיה',
+      });
     } catch {
       // try next endpoint
     }
   }
-  return null;
+  return options;
+}
+
+export async function fetchArtistImage(artistName) {
+  const options = await fetchWikipediaArtistImageOptions(artistName);
+  return options[0]?.url ?? null;
 }
 
 export function getArtistInitials(artist) {

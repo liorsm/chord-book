@@ -22,7 +22,7 @@ export default function SearchBar({ songs = [], placeholder = 'חפש שיר א�
       elevation={large ? 8 : 2}
       sx={{
         p: 0.5,
-        borderRadius: 4,
+        borderRadius: '16px',
         bgcolor: 'background.paper',
       }}
     >
