@@ -15,6 +15,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import FormatTextdirectionRToLIcon from '@mui/icons-material/FormatTextdirectionRToL';
 import FormatTextdirectionLToRIcon from '@mui/icons-material/FormatTextdirectionLToR';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
+import EditIcon from '@mui/icons-material/Edit';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -180,6 +181,7 @@ export default function ActionBar({
   onFontSizeChange,
   onFontFamilyChange,
   onAddToPlaylist,
+  onEdit,
   onToggleDirection,
   textDirection = 'rtl',
   hasYouTube,
@@ -293,9 +295,23 @@ export default function ActionBar({
         )}
 
         {onAddToPlaylist && (
-          <SquareBtn onClick={onAddToPlaylist}>
-            <PlaylistAddIcon fontSize="small" />
-          </SquareBtn>
+          <Tooltip title="הוסף לפלייליסט">
+            <span>
+              <SquareBtn onClick={onAddToPlaylist}>
+                <PlaylistAddIcon fontSize="small" />
+              </SquareBtn>
+            </span>
+          </Tooltip>
+        )}
+
+        {onEdit && (
+          <Tooltip title="עריכת שיר">
+            <span>
+              <SquareBtn onClick={onEdit}>
+                <EditIcon fontSize="small" />
+              </SquareBtn>
+            </span>
+          </Tooltip>
         )}
 
         {hasYouTube && (

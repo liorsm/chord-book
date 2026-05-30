@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Typography from '@mui/material/Typography';
@@ -16,12 +16,14 @@ import { usePlaylists } from '../hooks/usePlaylists';
 import { useAuth } from '../contexts/AuthContext';
 import { transposeContent, simplifyChords } from '../utils/chords';
 import { detectLanguage } from '../utils/direction';
+import { editSongPath } from '../utils/routes';
 
 const MIN_SEMITONES = -6;
 const MAX_SEMITONES = 6;
 
 export default function SongPage() {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const { getSongBySlug, loading } = useSongs();
   const { isAdmin } = useAuth();
   const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
@@ -102,6 +104,7 @@ export default function SongPage() {
         onFontSizeChange={setFontSize}
         onFontFamilyChange={setFontFamily}
         onAddToPlaylist={isAdmin ? () => setPlaylistDialogOpen(true) : undefined}
+        onEdit={isAdmin ? () => navigate(editSongPath(song)) : undefined}
         onToggleDirection={toggleDirection}
         textDirection={directionOverride || (language === 'he' ? 'rtl' : 'ltr')}
         hasYouTube={!!youtubeVideoId}
