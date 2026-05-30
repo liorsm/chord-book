@@ -1,12 +1,14 @@
+import { findChordsInText } from './chordSymbol';
+
 /** מסיר אקורדים לפני ספירת תווים לזיהוי שפה */
 export function stripChordsFromText(text) {
   if (!text) return '';
-  return text
-    .replace(/\[[^\]]+\]/g, ' ')
-    .replace(
-      /\b[A-G][#b]?(?:maj7|maj|m7|min7|min|dim7|dim|aug|sus4|sus2|add9|add|m|7|9|11|13|6|5|2|b5|#5|b9|#9|#11|b13)*(?:\/[A-G][#b]?)?\b/gi,
-      ' '
-    );
+  let result = text.replace(/\[[^\]]+\]/g, ' ');
+  const chords = findChordsInText(result).sort((a, b) => b.index - a.index);
+  for (const { index, length } of chords) {
+    result = `${result.slice(0, index)}${' '.repeat(length)}${result.slice(index + length)}`;
+  }
+  return result;
 }
 
 export function detectLanguage(text) {
