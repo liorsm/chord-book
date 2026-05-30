@@ -10,10 +10,12 @@ import EditSongPage from './pages/EditSongPage';
 import ArtistsPage from './pages/ArtistsPage';
 import ArtistPage from './pages/ArtistPage';
 import AdminGuard from './components/admin/AdminGuard';
+import SiteAccessGuard from './components/SiteAccessGuard';
 
 function App() {
   return (
     <Routes>
+      <Route element={<SiteAccessGuard />}>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="artists" element={<ArtistsPage />} />
@@ -53,6 +55,7 @@ function App() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
       </Route>
     </Routes>
   );
