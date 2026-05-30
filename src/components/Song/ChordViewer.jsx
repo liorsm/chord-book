@@ -1,12 +1,11 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import Typography from '@mui/material/Typography';
 import Portal from '@mui/material/Portal';
 import Fade from '@mui/material/Fade';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { extractUniqueChords, detectSections } from '../../utils/chords';
+import { detectSections } from '../../utils/chords';
 import { formatSongContentToHtml } from '../../utils/songRender';
 import {
   getTextDirection,
@@ -31,7 +30,6 @@ export default function ChordViewer({
   const textAlign = getTextAlign(language);
 
   const sections = detectSections(content);
-  const uniqueChords = extractUniqueChords(content);
   const html = formatSongContentToHtml(content, theme, direction);
 
   const isDark = theme.palette.mode === 'dark';
@@ -210,43 +208,6 @@ export default function ChordViewer({
           </Portal>
         )}
       </Box>
-
-      {uniqueChords.length > 0 && (
-        <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
-          <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-            אקורדים בשיר
-          </Typography>
-          <Box
-            dir={direction}
-            sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
-              justifyContent: getReadingAlignItems(),
-            }}
-          >
-            {uniqueChords.map((chord) => (
-              <Chip
-                key={chord}
-                label={chord}
-                size="small"
-                onClick={() => handleChordSelect(chord)}
-                sx={{
-                  fontWeight: 700,
-                  fontFamily: 'monospace',
-                  color: '#2563eb',
-                  bgcolor: 'rgba(37, 99, 235, 0.12)',
-                  border: '1px solid rgba(37, 99, 235, 0.15)',
-                  ...(selectedChord === chord && {
-                    bgcolor: 'rgba(37, 99, 235, 0.28)',
-                    borderColor: 'rgba(37, 99, 235, 0.4)',
-                  }),
-                }}
-              />
-            ))}
-          </Box>
-        </Box>
-      )}
     </Box>
   );
 }

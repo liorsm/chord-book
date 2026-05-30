@@ -62,8 +62,8 @@ function formatTonality(semitones) {
 }
 
 const panelBtnSx = (active) => ({
-  width: { xs: 40, md: 64 },
-  height: { xs: 40, md: 64 },
+  width: 40,
+  height: 40,
   borderRadius: 0,
   border: 'none',
   boxShadow: 'none',

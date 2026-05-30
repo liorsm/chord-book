@@ -11,6 +11,7 @@ import ChordViewer from '../components/Song/ChordViewer';
 import YouTubeEmbed from '../components/Song/YouTubeEmbed';
 import { parseYouTubeVideoId } from '../utils/youtube';
 import AddToPlaylistDialog from '../components/Song/AddToPlaylistDialog';
+import MoreSongsByArtist from '../components/Song/MoreSongsByArtist';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,7 +25,7 @@ const MAX_SEMITONES = 6;
 export default function SongPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { getSongBySlug, loading } = useSongs();
+  const { songs, getSongBySlug, loading } = useSongs();
   const { isAdmin } = useAuth();
   const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
 
@@ -128,6 +129,8 @@ export default function SongPage() {
           <YouTubeEmbed videoId={youtubeVideoId} title={song.title} autoplay />
         )}
       </Box>
+
+      <MoreSongsByArtist song={song} songs={songs} />
 
       {isAdmin && (
         <AddToPlaylistDialog

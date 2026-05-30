@@ -9,11 +9,48 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { detectLanguage } from '../utils/direction';
 import { generateSongSlug, resolveUniqueSlug } from '../utils/slug';
+import { normalizeArtistKey } from '../utils/artists';
+
+function buildArtistImageFields(artistImageUrl, artistImagePositionY) {
+  const url = artistImageUrl || null;
+  return {
+    artistImageUrl: url,
+    artistImagePositionY:
+      url && artistImagePositionY != null ? artistImagePositionY : null,
+  };
+}
+
+async function syncArtistImageToSongs(
+  songs,
+  artistName,
+  artistImageUrl,
+  artistImagePositionY,
+  excludeSongId = null
+) {
+  const key = normalizeArtistKey(artistName);
+  if (!key) return;
+
+  const imageFields = buildArtistImageFields(artistImageUrl, artistImagePositionY);
+  const others = songs.filter(
+    (s) => normalizeArtistKey(s.artist) === key && s.id !== excludeSongId
+  );
+  if (others.length === 0) return;
+
+  const batch = writeBatch(db);
+  for (const s of others) {
+    batch.update(doc(db, 'songs', s.id), {
+      ...imageFields,
+      updatedAt: serverTimestamp(),
+    });
+  }
+  await batch.commit();
+}
 
 function assignSlugsToSongs(docs) {
   const taken = new Set();
@@ -126,6 +163,15 @@ export function useSongs() {
       updatedAt: serverTimestamp(),
     };
     const ref = await addDoc(collection(db, 'songs'), newSong);
+    if (artistImageUrl) {
+      await syncArtistImageToSongs(
+        songs,
+        artist.trim(),
+        artistImageUrl,
+        artistImagePositionY,
+        ref.id
+      );
+    }
     await loadSongs();
     return { id: ref.id, ...newSong, slug };
   };
@@ -149,6 +195,21 @@ export function useSongs() {
       );
     }
     await updateDoc(doc(db, 'songs', id), payload);
+
+    const imageFieldsChanged =
+      'artistImageUrl' in data || 'artistImagePositionY' in data;
+    if (imageFieldsChanged) {
+      const song = songs.find((s) => s.id === id);
+      const artistName = (data.artist ?? song?.artist)?.trim();
+      const url =
+        'artistImageUrl' in data ? data.artistImageUrl : song?.artistImageUrl;
+      const positionY =
+        'artistImagePositionY' in data
+          ? data.artistImagePositionY
+          : song?.artistImagePositionY;
+      await syncArtistImageToSongs(songs, artistName, url, positionY, id);
+    }
+
     await loadSongs();
     return payload.slug ?? songs.find((s) => s.id === id)?.slug;
   };
