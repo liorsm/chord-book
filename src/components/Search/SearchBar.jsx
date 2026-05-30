@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { songPath } from '../../utils/routes';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
-import Autocomplete, { createFilterOptions } from '@mui/material/Autocomplete';
-import SearchIcon from '@mui/icons-material/Search';
-import Paper from '@mui/material/Paper';
+import { useCallback, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { songPath } from "../../utils/routes";
+import TextField from "@mui/material/TextField";
+import InputAdornment from "@mui/material/InputAdornment";
+import Autocomplete, { createFilterOptions } from "@mui/material/Autocomplete";
+import SearchIcon from "@mui/icons-material/Search";
+import Paper from "@mui/material/Paper";
 
 const MAX_RESULTS = 12;
 
@@ -15,7 +15,7 @@ const filterMatches = createFilterOptions({
 });
 
 function normalizeSearchText(text) {
-  return (text || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  return (text || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function buildSearchOptions(songs) {
@@ -27,8 +27,8 @@ function buildSearchOptions(songs) {
     if (!s?.id || seenIds.has(s.id)) continue;
     seenIds.add(s.id);
 
-    const title = (s.title || '').trim();
-    const artist = (s.artist || '').trim();
+    const title = (s.title || "").trim();
+    const artist = (s.artist || "").trim();
     const labelKey = normalizeSearchText(`${title} - ${artist}`);
     labelCounts.set(labelKey, (labelCounts.get(labelKey) || 0) + 1);
 
@@ -39,7 +39,7 @@ function buildSearchOptions(songs) {
     const baseLabel =
       item.title && item.artist
         ? `${item.title} - ${item.artist}`
-        : item.title || item.artist || 'שיר ללא שם';
+        : item.title || item.artist || "שיר ללא שם";
     const label =
       labelCounts.get(item.labelKey) > 1 && item.song.slug
         ? `${baseLabel} (${item.song.slug})`
@@ -63,7 +63,7 @@ function findBestMatch(options, inputValue) {
     (o) =>
       normalizeSearchText(o.label) === q ||
       normalizeSearchText(o.title) === q ||
-      normalizeSearchText(o.artist) === q
+      normalizeSearchText(o.artist) === q,
   );
   if (exact) return exact;
 
@@ -71,17 +71,17 @@ function findBestMatch(options, inputValue) {
     (o) =>
       normalizeSearchText(o.title).includes(q) ||
       normalizeSearchText(o.artist).includes(q) ||
-      normalizeSearchText(o.label).includes(q)
+      normalizeSearchText(o.label).includes(q),
   );
 }
 
 export default function SearchBar({
   songs = [],
-  placeholder = 'חפש שיר או אמן...',
+  placeholder = "חפש שיר או אמן...",
   large = false,
 }) {
   const navigate = useNavigate();
-  const [inputValue, setInputValue] = useState('');
+  const [inputValue, setInputValue] = useState("");
 
   const options = useMemo(() => buildSearchOptions(songs), [songs]);
 
@@ -94,7 +94,7 @@ export default function SearchBar({
     (match) => {
       if (match?.song) navigate(songPath(match.song));
     },
-    [navigate]
+    [navigate],
   );
 
   return (
@@ -102,12 +102,14 @@ export default function SearchBar({
       elevation={0}
       sx={{
         p: 0.5,
-        borderRadius: large ? '9999px' : '20px',
-        bgcolor: 'background.paper',
+        borderRadius: large ? "9999px" : "20px",
+        bgcolor: "background.paper",
       }}
     >
       <Autocomplete
         freeSolo
+        disableClearable
+        popupIcon={null}
         openOnFocus={false}
         options={options}
         filterOptions={filterOptions}
@@ -116,10 +118,10 @@ export default function SearchBar({
         onChange={(_, option) => {
           if (option?.song) goToMatch(option);
         }}
-        getOptionLabel={(o) => (typeof o === 'string' ? o : o.label)}
-        getOptionKey={(o) => (typeof o === 'string' ? o : o.id)}
+        getOptionLabel={(o) => (typeof o === "string" ? o : o.label)}
+        getOptionKey={(o) => (typeof o === "string" ? o : o.id)}
         isOptionEqualToValue={(a, b) => {
-          if (typeof a === 'string' || typeof b === 'string') return a === b;
+          if (typeof a === "string" || typeof b === "string") return a === b;
           return a?.id === b?.id;
         }}
         noOptionsText="לא נמצאו שירים"
@@ -127,9 +129,9 @@ export default function SearchBar({
           <TextField
             {...params}
             placeholder={placeholder}
-            size={large ? 'medium' : 'small'}
+            size={large ? "medium" : "small"}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
+              if (e.key === "Enter") {
                 const match = findBestMatch(options, inputValue);
                 if (match) goToMatch(match);
               }
@@ -137,17 +139,21 @@ export default function SearchBar({
             InputProps={{
               ...params.InputProps,
               endAdornment: (
-                <InputAdornment position="end">
+                <InputAdornment position="end" disablePointerEvents>
                   <SearchIcon color="primary" />
                 </InputAdornment>
               ),
               sx: {
-                fontSize: large ? '1.1rem' : '1rem',
+                fontSize: large ? "1.1rem" : "1rem",
                 py: large ? 1 : 0.5,
               },
             }}
+            inputProps={{
+              ...params.inputProps,
+              dir: "rtl",
+            }}
             sx={{
-              '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
+              "& .MuiOutlinedInput-notchedOutline": { border: "none" },
             }}
           />
         )}
