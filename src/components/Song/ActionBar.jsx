@@ -12,14 +12,17 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import CloseIcon from '@mui/icons-material/Close';
-import FormatTextdirectionRToLIcon from '@mui/icons-material/FormatTextdirectionRToL';
-import FormatTextdirectionLToRIcon from '@mui/icons-material/FormatTextdirectionLToR';
 import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import EditIcon from '@mui/icons-material/Edit';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
-import Tooltip from '@mui/material/Tooltip';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import {
+  getOppositeHorizontalStyle,
+  getOppositePanelPosition,
+} from '../../utils/direction';
 
 const FONT_OPTIONS = [
   { value: 'Rubik', label: 'Rubik' },
@@ -34,79 +37,209 @@ const MAX_FONT = 28;
 const MIN_SPEED = 0;
 const MAX_SPEED = 8;
 
+const SCROLL_POPUP_EST_W = 52;
+const SCROLL_POPUP_EST_H = 200;
+
+function getDefaultScrollPopupPosition(language) {
+  return getOppositePanelPosition(
+    language,
+    SCROLL_POPUP_EST_W,
+    SCROLL_POPUP_EST_H
+  );
+}
+
+function clampScrollPopupPosition(left, top, width, height) {
+  return {
+    left: Math.max(8, Math.min(window.innerWidth - width - 8, left)),
+    top: Math.max(8, Math.min(window.innerHeight - height - 8, top)),
+  };
+}
+
 function formatTonality(semitones) {
   if (semitones === 0) return '0';
   if (semitones > 0) return `${semitones}♯`;
   return `${Math.abs(semitones)}♭`;
 }
 
-function SquareBtn({ children, onClick, disabled, active, color = 'primary', sx = {} }) {
+const panelBtnSx = (active) => ({
+  width: { xs: 40, md: 64 },
+  height: { xs: 40, md: 64 },
+  borderRadius: 0,
+  border: 'none',
+  boxShadow: 'none',
+  background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
+  color: '#fff',
+  flexShrink: 0,
+  '&:hover': {
+    background: 'rgba(255,255,255,0.1)',
+  },
+  '&.Mui-disabled': {
+    color: 'rgba(255,255,255,0.28)',
+  },
+  '& .MuiSvgIcon-root': {
+    color: 'inherit',
+  },
+});
+
+function SquareBtn({ children, onClick, disabled, active, sx = {} }) {
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
     onClick?.();
   };
 
-  const gradients = {
-    primary: {
-      bg: 'linear-gradient(135deg, #7c3aed22, #a855f722)',
-      bgActive: 'linear-gradient(135deg, #7c3aed55, #a855f755)',
-      border: 'primary.main',
-    },
-    secondary: {
-      bg: 'linear-gradient(135deg, #ec489922, #a855f722)',
-      bgActive: 'linear-gradient(135deg, #ec489955, #a855f755)',
-      border: 'secondary.main',
-    },
-  };
-
-  const g = gradients[color] || gradients.primary;
-
   return (
     <IconButton
       size="small"
       disabled={disabled || !onClick}
       onClick={handleClick}
-      sx={{
-        width: 40,
-        height: 40,
-        borderRadius: 1.5,
-        background: active ? g.bgActive : g.bg,
-        border: '1px solid',
-        borderColor: active ? g.border : 'divider',
-        color: 'text.primary',
-        flexShrink: 0,
-        ...sx,
-      }}
+      sx={{ ...panelBtnSx(active), ...sx }}
     >
       {children}
     </IconButton>
   );
 }
 
-function ScrollPopup({ open, speed, onSpeedUp, onSpeedDown, onStop, onClose, anchorRef }) {
+function LabeledAction({ lines, children, ...btnProps }) {
+  const [line1, line2] = lines;
+
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 0.35,
+        minWidth: { xs: 42, md: 64 },
+      }}
+    >
+      <SquareBtn {...btnProps}>{children}</SquareBtn>
+      <Box sx={{ textAlign: 'center', userSelect: 'none', maxWidth: { xs: 52, md: 64 } }}>
+        <Typography
+          component="span"
+          display="block"
+          sx={{ fontSize: '0.58rem', lineHeight: 1.1, color: 'rgba(255,255,255,0.72)' }}
+        >
+          {line1}
+        </Typography>
+        <Typography
+          component="span"
+          display="block"
+          sx={{ fontSize: '0.58rem', lineHeight: 1.1, color: 'rgba(255,255,255,0.72)' }}
+        >
+          {line2}
+        </Typography>
+      </Box>
+    </Box>
+  );
+}
+
+function AdminToolsPanel({ onAddToPlaylist, onEdit, language = 'he' }) {
+  const theme = useTheme();
+  const mdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const sideMargin = mdUp ? 24 : 12;
+  const bottom = mdUp ? 24 : 16;
+
+  if (!onAddToPlaylist && !onEdit) return null;
+
+  return (
+    <Box
+      sx={{
+        position: 'fixed',
+        bottom,
+        zIndex: 1300,
+        bgcolor: '#000',
+        border: '1px solid #fff',
+        borderRadius: 0,
+        px: 1,
+        py: 0.75,
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.18)',
+      }}
+      style={{
+        ...getOppositeHorizontalStyle(language, sideMargin),
+      }}
+    >
+      <Typography
+        sx={{
+          fontSize: '0.55rem',
+          lineHeight: 1.2,
+          color: 'rgba(255,255,255,0.65)',
+          textAlign: 'center',
+          mb: 0.5,
+          letterSpacing: '0.02em',
+        }}
+      >
+        כלי ניהול
+      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: { xs: 0.75, sm: 1 } }}>
+        {onAddToPlaylist && (
+          <LabeledAction lines={['הוסף', 'לפלייליסט']} onClick={onAddToPlaylist}>
+            <PlaylistAddIcon fontSize="small" />
+          </LabeledAction>
+        )}
+        {onEdit && (
+          <LabeledAction lines={['עריכת', 'שיר']} onClick={onEdit}>
+            <EditIcon fontSize="small" />
+          </LabeledAction>
+        )}
+      </Box>
+    </Box>
+  );
+}
+
+function ScrollPopup({
+  open,
+  speed,
+  onSpeedUp,
+  onSpeedDown,
+  onStop,
+  onClose,
+  position,
+  onPositionChange,
+}) {
   const popupRef = useRef(null);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
 
-  useEffect(() => {
-    if (!open || !anchorRef?.current) return;
-    const rect = anchorRef.current.getBoundingClientRect();
-    setPos({
-      top: rect.top - 8,
-      left: rect.left + rect.width / 2,
-    });
-  }, [open, anchorRef]);
+  const handleDragStart = (e) => {
+    if (e.button !== 0 || !position) return;
+    e.preventDefault();
 
-  if (!open) return null;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const { left: startLeft, top: startTop } = position;
+
+    const onPointerMove = (ev) => {
+      const el = popupRef.current;
+      const w = el?.offsetWidth ?? SCROLL_POPUP_EST_W;
+      const h = el?.offsetHeight ?? SCROLL_POPUP_EST_H;
+      const next = clampScrollPopupPosition(
+        startLeft + (ev.clientX - startX),
+        startTop + (ev.clientY - startY),
+        w,
+        h
+      );
+      onPositionChange(next);
+    };
+
+    const onPointerUp = () => {
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
+    };
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
+  };
+
+  if (!open || !position) return null;
 
   return (
     <Box
       ref={popupRef}
-      sx={{
+      style={{
         position: 'fixed',
-        top: pos.top,
-        left: pos.left,
-        transform: 'translate(-50%, -100%)',
+        top: position.top,
+        left: position.left,
+      }}
+      sx={{
         zIndex: 1400,
         bgcolor: 'background.paper',
         border: '1px solid',
@@ -119,14 +252,43 @@ function ScrollPopup({ open, speed, onSpeedUp, onSpeedDown, onStop, onClose, anc
         gap: 0.5,
         boxShadow: 6,
         minWidth: 52,
+        touchAction: 'none',
       }}
       onClick={(e) => e.stopPropagation()}
     >
-      <IconButton size="small" onClick={onClose} sx={{ alignSelf: 'flex-end', p: 0.25 }}>
-        <CloseIcon sx={{ fontSize: 16, color: 'secondary.main' }} />
-      </IconButton>
+      <Box
+        onPointerDown={handleDragStart}
+        sx={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          cursor: 'grab',
+          userSelect: 'none',
+          touchAction: 'none',
+          '&:active': { cursor: 'grabbing' },
+        }}
+      >
+        <Box
+          sx={{
+            width: 28,
+            height: 4,
+            borderRadius: 2,
+            bgcolor: 'action.disabled',
+            mb: 0.5,
+          }}
+        />
+        <IconButton
+          size="small"
+          onClick={onClose}
+          onPointerDown={(e) => e.stopPropagation()}
+          sx={{ alignSelf: 'flex-end', p: 0.25, mt: -0.5 }}
+        >
+          <CloseIcon sx={{ fontSize: 16, color: 'secondary.main' }} />
+        </IconButton>
+      </Box>
 
-      <SquareBtn color="secondary" onClick={onSpeedDown} disabled={speed <= MIN_SPEED}>
+      <SquareBtn onClick={onSpeedDown} disabled={speed <= MIN_SPEED}>
         <KeyboardArrowUpIcon fontSize="small" />
       </SquareBtn>
 
@@ -148,7 +310,7 @@ function ScrollPopup({ open, speed, onSpeedUp, onSpeedDown, onStop, onClose, anc
         </Typography>
       </Box>
 
-      <SquareBtn color="secondary" onClick={onSpeedUp} disabled={speed >= MAX_SPEED}>
+      <SquareBtn onClick={onSpeedUp} disabled={speed >= MAX_SPEED}>
         <KeyboardArrowDownIcon fontSize="small" />
       </SquareBtn>
 
@@ -182,8 +344,6 @@ export default function ActionBar({
   onFontFamilyChange,
   onAddToPlaylist,
   onEdit,
-  onToggleDirection,
-  textDirection = 'rtl',
   hasYouTube,
   youtubeOpen,
   onToggleYouTube,
@@ -191,11 +351,26 @@ export default function ActionBar({
   onScrollSpeedChange,
   chordsSimplified = false,
   onToggleSimplifyChords,
+  language = 'he',
 }) {
   const [fontPanelOpen, setFontPanelOpen] = useState(false);
   const [scrollPopupOpen, setScrollPopupOpen] = useState(false);
-  const scrollBtnRef = useRef(null);
+  const [scrollPopupPos, setScrollPopupPos] = useState(null);
   const scrollIntervalRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollPopupOpen) {
+      setScrollPopupPos(getDefaultScrollPopupPosition(language));
+    } else {
+      setScrollPopupPos(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only reset placement when song language changes
+  }, [language]);
+
+  const openScrollPopup = () => {
+    setScrollPopupPos((pos) => pos ?? getDefaultScrollPopupPosition(language));
+    setScrollPopupOpen(true);
+  };
 
   useEffect(() => {
     if (scrollSpeed <= 0) {
@@ -225,196 +400,215 @@ export default function ActionBar({
   };
 
   return (
+    <>
     <Paper
-      elevation={6}
+      elevation={0}
       sx={{
         mx: { xs: 2, md: 4 },
         mt: -4,
         mb: 3,
         position: 'relative',
         zIndex: 2,
-        borderRadius: 3,
+        borderRadius: 0,
+        bgcolor: '#000',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.18)',
         p: 1.5,
+        color: '#fff',
       }}
     >
-      {/* Tonality row */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1.5 }}>
-        <SquareBtn color="secondary" onClick={onTransposeUp} disabled={semitones >= 6}>
-          <ChevronRightIcon fontSize="small" />
-        </SquareBtn>
-
-        <Box
-          sx={{
-            flex: 1,
-            maxWidth: 200,
-            textAlign: 'center',
-            py: 0.75,
-            px: 1,
-            bgcolor: 'background.default',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 1.5,
-          }}
-        >
-          <Typography variant="body2" fontWeight={600} noWrap>
-            טון: {formatTonality(semitones)}
-          </Typography>
-        </Box>
-
-        <SquareBtn color="secondary" onClick={onTransposeDown} disabled={semitones <= -6}>
-          <ChevronLeftIcon fontSize="small" />
-        </SquareBtn>
-      </Box>
-
-      {/* Main action buttons */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, flexWrap: 'wrap' }}>
-        <SquareBtn
-          active={fontPanelOpen}
-          onClick={() => setFontPanelOpen((v) => !v)}
-          sx={{ fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '0.85rem' }}
-        >
-          TT
-        </SquareBtn>
-
-        <SquareBtn onClick={onToggleDirection}>
-          {textDirection === 'rtl' ? (
-            <FormatTextdirectionRToLIcon fontSize="small" />
-          ) : (
-            <FormatTextdirectionLToRIcon fontSize="small" />
-          )}
-        </SquareBtn>
-
-        {onToggleSimplifyChords && (
-          <Tooltip title={chordsSimplified ? 'הצג אקורדים מלאים' : 'הפשט אקורדים (B7→B, Am7→Am)'}>
-            <span>
-              <SquareBtn active={chordsSimplified} onClick={onToggleSimplifyChords}>
-                <Filter1Icon fontSize="small" />
-              </SquareBtn>
-            </span>
-          </Tooltip>
-        )}
-
-        {onAddToPlaylist && (
-          <Tooltip title="הוסף לפלייליסט">
-            <span>
-              <SquareBtn onClick={onAddToPlaylist}>
-                <PlaylistAddIcon fontSize="small" />
-              </SquareBtn>
-            </span>
-          </Tooltip>
-        )}
-
-        {onEdit && (
-          <Tooltip title="עריכת שיר">
-            <span>
-              <SquareBtn onClick={onEdit}>
-                <EditIcon fontSize="small" />
-              </SquareBtn>
-            </span>
-          </Tooltip>
-        )}
-
-        {hasYouTube && (
-          <SquareBtn active={youtubeOpen} onClick={onToggleYouTube}>
-            <YouTubeIcon fontSize="small" />
-          </SquareBtn>
-        )}
-
-        <Box ref={scrollBtnRef} sx={{ position: 'relative' }}>
-          <SquareBtn
-            active={scrollPopupOpen || scrollSpeed > 0}
-            color="secondary"
-            onClick={() => setScrollPopupOpen((v) => !v)}
-          >
-            <UnfoldMoreIcon fontSize="small" />
-          </SquareBtn>
-
-          {scrollPopupOpen && (
-            <ClickAwayListener onClickAway={() => setScrollPopupOpen(false)}>
-              <Box>
-                <ScrollPopup
-                  open={scrollPopupOpen}
-                  speed={scrollSpeed}
-                  onSpeedUp={handleScrollSpeedUp}
-                  onSpeedDown={handleScrollSpeedDown}
-                  onStop={handleScrollStop}
-                  onClose={() => setScrollPopupOpen(false)}
-                  anchorRef={scrollBtnRef}
-                />
-              </Box>
-            </ClickAwayListener>
-          )}
-        </Box>
-      </Box>
-
-      {/* Font panel (TT toggle) */}
-      {fontPanelOpen && (
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: fontPanelOpen ? 1.25 : 0,
+          width: '100%',
+        }}
+      >
         <Box
           sx={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-            mt: 1.5,
-            pt: 1.5,
-            borderTop: '1px solid',
-            borderColor: 'divider',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            width: '100%',
+            gap: 2,
+            pb: 0.25,
           }}
         >
-          <FormControl size="small" sx={{ flex: 1, minWidth: 0 }}>
-            <Select
-              value={fontFamily}
-              onChange={(e) => onFontFamilyChange(e.target.value)}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: { xs: 0.5, sm: 0.75 },
+              flexShrink: 0,
+            }}
+          >
+            <LabeledAction
+              lines={['העלאת', 'טון']}
+              onClick={onTransposeUp}
+              disabled={semitones >= 6}
+            >
+              <ChevronRightIcon fontSize="small" />
+            </LabeledAction>
+
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              noWrap
               sx={{
-                bgcolor: 'background.default',
-                borderRadius: 1.5,
-                '& .MuiSelect-select': { py: 0.75 },
+                color: '#fff',
+                alignSelf: 'center',
+                px: 0.5,
+                minWidth: 23,
+                textAlign: 'center',
+                pb: '22px',
               }}
             >
-              {FONT_OPTIONS.map((f) => (
-                <MenuItem key={f.value} value={f.value} sx={{ fontFamily: f.value }}>
-                  {f.label}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              {formatTonality(semitones)}
+            </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <LabeledAction
+              lines={['הורדת', 'טון']}
+              onClick={onTransposeDown}
+              disabled={semitones <= -6}
+            >
+              <ChevronLeftIcon fontSize="small" />
+            </LabeledAction>
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'flex-end',
+              gap: { xs: 0.75, sm: 1.25 },
+              flexWrap: 'nowrap',
+              overflowX: 'auto',
+              minWidth: 0,
+              '&::-webkit-scrollbar': { display: 'none' },
+              scrollbarWidth: 'none',
+            }}
+          >
+            <LabeledAction
+              lines={['הגדל/הקטן', 'טקסט']}
+              active={fontPanelOpen}
+              onClick={() => setFontPanelOpen((v) => !v)}
+              sx={{ fontFamily: 'Georgia, serif', fontWeight: 700, fontSize: '0.85rem' }}
+            >
+              TT
+            </LabeledAction>
+
+            {onToggleSimplifyChords && (
+              <LabeledAction
+                lines={['הפשט', 'אקורדים']}
+                active={chordsSimplified}
+                onClick={onToggleSimplifyChords}
+              >
+                <Filter1Icon fontSize="small" />
+              </LabeledAction>
+            )}
+
+            {hasYouTube && (
+              <LabeledAction lines={['צפייה', 'בשיר']} active={youtubeOpen} onClick={onToggleYouTube}>
+                <YouTubeIcon fontSize="small" />
+              </LabeledAction>
+            )}
+
+            <Box sx={{ position: 'relative' }}>
+              <LabeledAction
+                lines={['גלילה', 'אוטומטית']}
+                active={scrollPopupOpen || scrollSpeed > 0}
+                onClick={() => {
+                  if (scrollPopupOpen) setScrollPopupOpen(false);
+                  else openScrollPopup();
+                }}
+              >
+                <UnfoldMoreIcon fontSize="small" />
+              </LabeledAction>
+
+              {scrollPopupOpen && (
+                <ClickAwayListener onClickAway={() => setScrollPopupOpen(false)}>
+                  <Box>
+                    <ScrollPopup
+                      open={scrollPopupOpen}
+                      speed={scrollSpeed}
+                      onSpeedUp={handleScrollSpeedUp}
+                      onSpeedDown={handleScrollSpeedDown}
+                      onStop={handleScrollStop}
+                      onClose={() => setScrollPopupOpen(false)}
+                      position={scrollPopupPos}
+                      onPositionChange={setScrollPopupPos}
+                    />
+                  </Box>
+                </ClickAwayListener>
+              )}
+            </Box>
+          </Box>
+        </Box>
+
+        {fontPanelOpen && (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: { xs: 0.75, sm: 1.25 },
+              width: '100%',
+              pt: 0.75,
+              borderTop: '1px solid rgba(255,255,255,0.15)',
+            }}
+          >
+            <FormControl size="small" sx={{ minWidth: 88, flexShrink: 0 }}>
+              <Select
+                value={fontFamily}
+                onChange={(e) => onFontFamilyChange(e.target.value)}
+                variant="standard"
+                disableUnderline
+                sx={{
+                  color: '#fff',
+                  fontSize: '0.8rem',
+                  '& .MuiSvgIcon-root': { color: '#fff' },
+                  '& .MuiSelect-select': { py: 0.5, pr: 2.5 },
+                }}
+              >
+                {FONT_OPTIONS.map((f) => (
+                  <MenuItem key={f.value} value={f.value} sx={{ fontFamily: f.value }}>
+                    {f.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
             <SquareBtn
-              color="secondary"
               onClick={() => onFontSizeChange(Math.max(MIN_FONT, fontSize - 2))}
               disabled={fontSize <= MIN_FONT}
             >
               <ChevronRightIcon fontSize="small" />
             </SquareBtn>
 
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'background.default',
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1.5,
-              }}
+            <Typography
+              variant="body2"
+              fontWeight={700}
+              sx={{ color: '#fff', minWidth: 24, textAlign: 'center' }}
             >
-              <Typography variant="body2" fontWeight={700}>
-                {fontSize}
-              </Typography>
-            </Box>
+              {fontSize}
+            </Typography>
 
             <SquareBtn
-              color="secondary"
               onClick={() => onFontSizeChange(Math.min(MAX_FONT, fontSize + 2))}
               disabled={fontSize >= MAX_FONT}
             >
               <ChevronLeftIcon fontSize="small" />
             </SquareBtn>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </Paper>
+
+    <AdminToolsPanel
+      onAddToPlaylist={onAddToPlaylist}
+      onEdit={onEdit}
+      language={language}
+    />
+    </>
   );
 }

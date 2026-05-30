@@ -31,3 +31,32 @@ export function getTextDirection(language) {
 export function getTextAlign(language) {
   return language === 'he' ? 'right' : 'left';
 }
+
+/**
+ * ב-flex עם dir תואם לשפה, flex-start = תחילת שורת הקריאה (ימין בעברית, שמאל באנגלית).
+ * אל תשתמשו ב-flex-end ליישור «ימין» — ב-RTL האתר flex-end הוא שמאל פיזי.
+ */
+export function getReadingAlignItems() {
+  return 'flex-start';
+}
+
+/**
+ * מיקום אופקי פיזי לרכיב fixed — חייב להיות ב-style (לא sx).
+ * stylis-plugin-rtl של MUI הופך left↔right ב-sx, ולכן «שמאל» ב-sx מופיע בפועל מימין.
+ */
+export function getOppositeHorizontalStyle(language, marginPx) {
+  if (language === 'he') {
+    return { left: marginPx };
+  }
+  return { right: marginPx };
+}
+
+/** מיקום פאנל צף — קואורדינטות פיזיות מ-left/top של viewport (לשימוש ב-style) */
+export function getOppositePanelPosition(language, panelWidth, panelHeight, margin = 24) {
+  const top = Math.max(8, (window.innerHeight - panelHeight) / 2);
+  const left =
+    language === 'he'
+      ? margin
+      : Math.max(8, window.innerWidth - panelWidth - margin);
+  return { left, top };
+}

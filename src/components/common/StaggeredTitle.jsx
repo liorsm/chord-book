@@ -1,6 +1,10 @@
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { detectLanguage, getTextDirection } from "../../utils/direction";
+import {
+  detectLanguage,
+  getTextDirection,
+  getReadingAlignItems,
+} from "../../utils/direction";
 
 const titleFontSx = {
   color: "white",
@@ -10,14 +14,11 @@ const titleFontSx = {
   m: 0,
 };
 
-function blockAlignSx(align) {
-  const pushRight = align === "right";
+function blockAlignSx() {
   return {
     display: "block",
     width: "fit-content",
     maxWidth: "100%",
-    mr: pushRight ? "auto" : 0,
-    ml: pushRight ? 0 : "auto",
   };
 }
 
@@ -47,7 +48,6 @@ export default function StaggeredTitle({
 }) {
   const language = detectLanguage(`${children ?? ""} ${subtitle ?? ""}`);
   const dir = getTextDirection(language);
-  const pushRight = language === "he";
 
   return (
     <Box
@@ -57,7 +57,7 @@ export default function StaggeredTitle({
         width: "100%",
         display: "flex",
         flexDirection: "column",
-        alignItems: pushRight ? "flex-end" : "flex-start",
+        alignItems: getReadingAlignItems(),
         gap: 0,
         top: "-20px",
         position: "relative",
@@ -66,7 +66,7 @@ export default function StaggeredTitle({
     >
       {children && (
         <Box
-          sx={{ ...blockAlignSx(pushRight ? "right" : "left"), lineHeight: 0 }}
+          sx={{ ...blockAlignSx(), lineHeight: 0 }}
         >
           <Typography
             component="span"
@@ -93,7 +93,7 @@ export default function StaggeredTitle({
       {subtitle && (
         <Box
           sx={{
-            ...blockAlignSx(pushRight ? "right" : "left"),
+            ...blockAlignSx(),
             ...subtitleBlackSx,
             lineHeight: 0,
             mt: "-1px",

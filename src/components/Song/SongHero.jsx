@@ -88,7 +88,7 @@ export default function SongHero({ song }) {
           flexDirection: "column",
           justifyContent: "flex-end",
           minHeight: { xs: 310, md: 340 },
-          p: { xs: 3, md: 4 },
+          p: { xs: "24px 16px", md: 4 },
           pt: 8,
           pb: 9,
           pointerEvents: "none",

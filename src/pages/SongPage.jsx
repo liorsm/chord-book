@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -35,7 +35,6 @@ export default function SongPage() {
   const [scrollSpeed, setScrollSpeed] = useState(0);
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
   const [snack, setSnack] = useState('');
-  const [directionOverride, setDirectionOverride] = useState(null);
   const [youtubeOpen, setYoutubeOpen] = useState(false);
   const [chordsSimplified, setChordsSimplified] = useState(false);
 
@@ -44,7 +43,6 @@ export default function SongPage() {
     setFontSize(18);
     setFontFamily('Rubik');
     setScrollSpeed(0);
-    setDirectionOverride(null);
     setYoutubeOpen(false);
     setChordsSimplified(false);
   }, [slug]);
@@ -68,12 +66,6 @@ export default function SongPage() {
     if (detected === 'en' && /[\u0590-\u05FF]/.test(text)) return 'he';
     return detected;
   }, [song?.title, song?.artist, song?.content]);
-
-  const toggleDirection = useCallback(() => {
-    const current =
-      directionOverride || (language === 'he' ? 'rtl' : 'ltr');
-    setDirectionOverride(current === 'rtl' ? 'ltr' : 'rtl');
-  }, [directionOverride, language]);
 
   if (loading && !song) {
     return (
@@ -105,8 +97,6 @@ export default function SongPage() {
         onFontFamilyChange={setFontFamily}
         onAddToPlaylist={isAdmin ? () => setPlaylistDialogOpen(true) : undefined}
         onEdit={isAdmin ? () => navigate(editSongPath(song)) : undefined}
-        onToggleDirection={toggleDirection}
-        textDirection={directionOverride || (language === 'he' ? 'rtl' : 'ltr')}
         hasYouTube={!!youtubeVideoId}
         youtubeOpen={youtubeOpen}
         onToggleYouTube={() => setYoutubeOpen((v) => !v)}
@@ -114,6 +104,7 @@ export default function SongPage() {
         onScrollSpeedChange={setScrollSpeed}
         chordsSimplified={chordsSimplified}
         onToggleSimplifyChords={() => setChordsSimplified((v) => !v)}
+        language={language}
       />
 
       <Box
@@ -126,12 +117,11 @@ export default function SongPage() {
       >
         <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
           <ChordViewer
-            key={`${song?.id}-${semitones}-${chordsSimplified}-${fontSize}-${fontFamily}-${directionOverride}`}
+            key={`${song?.id}-${semitones}-${chordsSimplified}-${fontSize}-${fontFamily}`}
             content={displayContent}
             language={language}
             fontSize={fontSize}
             fontFamily={fontFamily}
-            directionOverride={directionOverride}
           />
         </Box>
         {youtubeOpen && youtubeVideoId && (

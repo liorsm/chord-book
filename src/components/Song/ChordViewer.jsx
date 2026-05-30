@@ -5,9 +5,15 @@ import Typography from '@mui/material/Typography';
 import Portal from '@mui/material/Portal';
 import Fade from '@mui/material/Fade';
 import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { extractUniqueChords, detectSections } from '../../utils/chords';
 import { formatSongContentToHtml } from '../../utils/songRender';
-import { getTextDirection, getTextAlign } from '../../utils/direction';
+import {
+  getTextDirection,
+  getTextAlign,
+  getReadingAlignItems,
+  getOppositeHorizontalStyle,
+} from '../../utils/direction';
 import PianoChordCard from './PianoChordCard';
 
 export default function ChordViewer({
@@ -15,20 +21,14 @@ export default function ChordViewer({
   language = 'he',
   fontSize = 18,
   fontFamily = 'Rubik',
-  directionOverride = null,
 }) {
   const theme = useTheme();
+  const mdUp = useMediaQuery(theme.breakpoints.up('md'));
   const contentRef = useRef(null);
   const [selectedChord, setSelectedChord] = useState(null);
 
-  const languageDir = getTextDirection(language);
-  const direction = directionOverride || languageDir;
-  const textAlign =
-    directionOverride === 'ltr'
-      ? 'left'
-      : directionOverride === 'rtl'
-        ? 'right'
-        : getTextAlign(language);
+  const direction = getTextDirection(language);
+  const textAlign = getTextAlign(language);
 
   const sections = detectSections(content);
   const uniqueChords = extractUniqueChords(content);
@@ -102,7 +102,16 @@ export default function ChordViewer({
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, pb: 4 }}>
       {sections.length > 0 && (
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2, justifyContent: direction === 'rtl' ? 'flex-end' : 'flex-start' }}>
+        <Box
+          dir={direction}
+          sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 1,
+            mb: 2,
+            justifyContent: getReadingAlignItems(),
+          }}
+        >
           {sections.map((s, i) => (
             <Chip key={`${s}-${i}`} label={s} size="small" color="primary" variant="outlined" />
           ))}
@@ -182,7 +191,7 @@ export default function ChordViewer({
               sx={{
                 position: 'fixed',
                 zIndex: 1300,
-                left: { xs: '50%', md: 24 },
+                left: { xs: '50%', md: 'auto' },
                 top: { xs: 'auto', md: 100 },
                 bottom: { xs: 24, md: 'auto' },
                 transform: { xs: 'translateX(-50%)', md: 'none' },
@@ -190,6 +199,7 @@ export default function ChordViewer({
                 maxWidth: 360,
                 pointerEvents: 'auto',
               }}
+              style={mdUp ? getOppositeHorizontalStyle(language, 24) : undefined}
               onClick={(e) => e.stopPropagation()}
             >
               <PianoChordCard
@@ -207,11 +217,12 @@ export default function ChordViewer({
             אקורדים בשיר
           </Typography>
           <Box
+            dir={direction}
             sx={{
               display: 'flex',
               flexWrap: 'wrap',
               gap: 1,
-              justifyContent: direction === 'rtl' ? 'flex-end' : 'flex-start',
+              justifyContent: getReadingAlignItems(),
             }}
           >
             {uniqueChords.map((chord) => (
