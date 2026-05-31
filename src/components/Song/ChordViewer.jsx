@@ -216,7 +216,7 @@ export default function ChordViewer({
                   borderRight: 1,
                   borderColor: 'divider',
                 }}
-                dangerouslySetInnerHTML={{ __html: htmlColumns.first }}
+                dangerouslySetInnerHTML={{ __html: htmlColumns.second }}
               />
               <Box
                 className="song-book-column song-book-column--end"
@@ -225,7 +225,7 @@ export default function ChordViewer({
                   minWidth: 0,
                   pl: 1.5,
                 }}
-                dangerouslySetInnerHTML={{ __html: htmlColumns.second }}
+                dangerouslySetInnerHTML={{ __html: htmlColumns.first }}
               />
             </Box>
           ) : (
