@@ -4,14 +4,11 @@ import CardActionArea from '@mui/material/CardActionArea';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import IconButton from '@mui/material/IconButton';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { getGradientForArtist } from '../../utils/artistImage';
 import { artistImageBackgroundStyle } from '../../utils/artistImagePosition';
 import { songPath } from '../../utils/routes';
 
-export default function SongCard({ song, onToggleFavorite }) {
+export default function SongCard({ song }) {
   const navigate = useNavigate();
 
   return (
@@ -42,20 +39,6 @@ export default function SongCard({ song, onToggleFavorite }) {
           </Typography>
         </CardContent>
       </CardActionArea>
-      {onToggleFavorite && (
-        <Box sx={{ display: 'flex', alignItems: 'center', pr: 1 }}>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFavorite(song.id);
-            }}
-            color={song.isFavorite ? 'error' : 'default'}
-          >
-            {song.isFavorite ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-          </IconButton>
-        </Box>
-      )}
     </Card>
   );
 }

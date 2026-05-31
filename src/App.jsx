@@ -4,7 +4,6 @@ import HomePage from './pages/HomePage';
 import SongPage from './pages/SongPage';
 import AddSongPage from './pages/AddSongPage';
 import PlaylistPage from './pages/PlaylistPage';
-import FavoritesPage from './pages/FavoritesPage';
 import ManagePage from './pages/ManagePage';
 import EditSongPage from './pages/EditSongPage';
 import ArtistsPage from './pages/ArtistsPage';
@@ -27,14 +26,6 @@ function App() {
           element={
             <AdminGuard>
               <AddSongPage />
-            </AdminGuard>
-          }
-        />
-        <Route
-          path="favorites"
-          element={
-            <AdminGuard>
-              <FavoritesPage />
             </AdminGuard>
           }
         />

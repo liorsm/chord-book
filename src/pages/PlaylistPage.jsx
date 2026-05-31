@@ -21,7 +21,7 @@ export default function PlaylistPage() {
   const { isAdmin } = useAuth();
   const { getPlaylistBySlug, deletePlaylist, removeSongFromPlaylist, loading: plLoading } =
     usePlaylists();
-  const { songs, loading: songsLoading, toggleFavorite } = useSongs();
+  const { songs, loading: songsLoading } = useSongs();
 
   const playlist = getPlaylistBySlug(slug);
   const playlistSongs = (playlist?.songIds || [])
@@ -124,15 +124,12 @@ export default function PlaylistPage() {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           {playlistSongs.map((song) => (
             <Box key={song.id} sx={{ position: 'relative' }}>
-              <SongCard
-                song={song}
-                onToggleFavorite={isAdmin ? toggleFavorite : undefined}
-              />
+              <SongCard song={song} />
               {isAdmin && (
                 <IconButton
                   size="small"
                   color="error"
-                  sx={{ position: 'absolute', top: 8, left: 8 }}
+                  sx={{ position: 'absolute', top: 8, right: 8 }}
                   onClick={() => removeSongFromPlaylist(playlist.id, song.id)}
                 >
                   <DeleteIcon fontSize="small" />

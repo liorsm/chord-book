@@ -64,7 +64,6 @@ function assignSlugsToSongs(docs) {
     taken.add(slug);
     return {
       id: d.id,
-      isFavorite: false,
       language: 'he',
       artistImageUrl: null,
       youtubeUrl: null,
@@ -158,7 +157,6 @@ export function useSongs() {
       language,
       slug,
       userId,
-      isFavorite: false,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
@@ -220,13 +218,6 @@ export function useSongs() {
     await loadSongs();
   };
 
-  const toggleFavorite = async (id) => {
-    requireAdmin();
-    const song = songs.find((s) => s.id === id);
-    if (!song) return;
-    await updateSong(id, { isFavorite: !song.isFavorite });
-  };
-
   const getSongById = (id) => songs.find((s) => s.id === id);
 
   const getSongBySlug = (slugOrId) => {
@@ -240,18 +231,14 @@ export function useSongs() {
     );
   };
 
-  const favoriteSongs = songs.filter((s) => s.isFavorite);
-
   return {
     songs,
-    favoriteSongs,
     loading: loading || authLoading,
     error,
     loadSongs,
     addSong,
     updateSong,
     deleteSong,
-    toggleFavorite,
     getSongById,
     getSongBySlug,
     isAdmin,
