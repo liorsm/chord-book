@@ -38,14 +38,7 @@ function App() {
             </AdminGuard>
           }
         />
-        <Route
-          path="playlist/:slug"
-          element={
-            <AdminGuard>
-              <PlaylistPage />
-            </AdminGuard>
-          }
-        />
+        <Route path="playlist/:slug" element={<PlaylistPage />} />
         <Route
           path="manage/songs/:slug"
           element={
