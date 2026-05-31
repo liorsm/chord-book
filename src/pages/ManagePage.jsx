@@ -26,6 +26,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import PlaylistPlayIcon from '@mui/icons-material/PlaylistPlay';
 import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -62,6 +63,7 @@ export default function ManagePage() {
   const [msg, setMsg] = useState('');
   const [msgSeverity, setMsgSeverity] = useState('success');
   const [backupBusy, setBackupBusy] = useState(false);
+  const [dragPlaylistId, setDragPlaylistId] = useState(null);
   const importInputRef = useRef(null);
 
   const notify = (text, severity = 'success') => {
@@ -78,6 +80,8 @@ export default function ManagePage() {
     deletePlaylist,
     removeSongFromPlaylist,
     moveSongInPlaylist,
+    reorderPlaylists,
+    setPlaylistPosition,
     loadPlaylists,
   } = usePlaylists();
 
@@ -118,6 +122,40 @@ export default function ManagePage() {
       coverImageUrl: trimmed || null,
     });
     notify(trimmed ? 'תמונת הרקע נשמרה' : 'תמונת הרקע הוסרה');
+  };
+
+  const handlePlaylistPositionChange = async (playlistId, value, currentIndex) => {
+    const position = parseInt(value, 10);
+    if (
+      Number.isNaN(position) ||
+      position < 1 ||
+      position > playlists.length ||
+      position === currentIndex + 1
+    ) {
+      return;
+    }
+    await setPlaylistPosition(playlistId, position);
+    notify('סדר הפלייליסטים עודכן');
+  };
+
+  const handlePlaylistDrop = async (targetId) => {
+    if (!dragPlaylistId || dragPlaylistId === targetId) {
+      setDragPlaylistId(null);
+      return;
+    }
+    const ids = playlists.map((p) => p.id);
+    const fromIndex = ids.indexOf(dragPlaylistId);
+    const toIndex = ids.indexOf(targetId);
+    if (fromIndex === -1 || toIndex === -1) {
+      setDragPlaylistId(null);
+      return;
+    }
+    const nextIds = [...ids];
+    const [item] = nextIds.splice(fromIndex, 1);
+    nextIds.splice(toIndex, 0, item);
+    await reorderPlaylists(nextIds);
+    setDragPlaylistId(null);
+    notify('סדר הפלייליסטים עודכן');
   };
 
   const handleExportBackup = () => {
@@ -341,12 +379,70 @@ export default function ManagePage() {
                 </Button>
               </Box>
 
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', px: 2, pb: 1 }}
+              >
+                גרור לשינוי סדר, או הזן מספר מיקום (1 = ראשון בדף הבית)
+              </Typography>
+
               <List disablePadding>
-                {playlists.map((pl) => (
-                  <ListItem key={pl.id} disablePadding divider>
+                {playlists.map((pl, index) => (
+                  <ListItem
+                    key={pl.id}
+                    disablePadding
+                    divider
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => handlePlaylistDrop(pl.id)}
+                    sx={{
+                      opacity: dragPlaylistId === pl.id ? 0.55 : 1,
+                      bgcolor:
+                        dragPlaylistId && dragPlaylistId !== pl.id
+                          ? 'action.hover'
+                          : undefined,
+                    }}
+                  >
+                    <Box
+                      draggable
+                      onDragStart={(e) => {
+                        setDragPlaylistId(pl.id);
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onDragEnd={() => setDragPlaylistId(null)}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        px: 1,
+                        cursor: 'grab',
+                        color: 'text.secondary',
+                      }}
+                      aria-label="גרור לשינוי סדר"
+                    >
+                      <DragIndicatorIcon fontSize="small" />
+                    </Box>
+                    <TextField
+                      key={`${pl.id}-${index}`}
+                      type="number"
+                      size="small"
+                      defaultValue={index + 1}
+                      inputProps={{
+                        min: 1,
+                        max: playlists.length,
+                        'aria-label': 'מיקום בתצוגה',
+                      }}
+                      onBlur={(e) =>
+                        handlePlaylistPositionChange(pl.id, e.target.value, index)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') e.target.blur();
+                      }}
+                      sx={{ width: 56, mx: 1, flexShrink: 0 }}
+                    />
                     <ListItemButton
                       selected={selectedPlaylistId === pl.id}
                       onClick={() => setSelectedPlaylistId(pl.id)}
+                      sx={{ flex: 1 }}
                     >
                       <PlaylistPlayIcon sx={{ mr: 2, color: 'primary.main' }} />
                       <ListItemText

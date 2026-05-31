@@ -154,6 +154,9 @@ export default function SearchBar({
             }}
             sx={{
               "& .MuiOutlinedInput-notchedOutline": { border: "none" },
+              ...(large && {
+                "& .MuiOutlinedInput-root": { height: 48 },
+              }),
             }}
           />
         )}

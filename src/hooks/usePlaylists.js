@@ -16,6 +16,17 @@ import {
 } from '../utils/artistImage';
 import { generatePlaylistSlug, resolveUniqueSlug } from '../utils/slug';
 
+export function sortPlaylists(list) {
+  return [...list].sort((a, b) => {
+    const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    const orderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    if (orderA !== orderB) return orderA - orderB;
+    const ta = a.createdAt?.seconds || 0;
+    const tb = b.createdAt?.seconds || 0;
+    return tb - ta;
+  });
+}
+
 function assignSlugsToPlaylists(docs) {
   const taken = new Set();
   return docs.map((d) => {
@@ -63,12 +74,7 @@ export function usePlaylists() {
         );
       }
 
-      list.sort((a, b) => {
-        const ta = a.createdAt?.seconds || 0;
-        const tb = b.createdAt?.seconds || 0;
-        return tb - ta;
-      });
-      setPlaylists(list);
+      setPlaylists(sortPlaylists(list));
     } catch (err) {
       setError(err.message);
     } finally {
@@ -104,12 +110,17 @@ export function usePlaylists() {
     const coverColor =
       GRADIENT_PALETTES[Math.floor(Math.random() * GRADIENT_PALETTES.length)];
     const slug = buildUniquePlaylistSlug(name);
+    const maxSortOrder = playlists.reduce(
+      (max, p) => Math.max(max, p.sortOrder ?? -1),
+      -1
+    );
     const ref = await addDoc(collection(db, 'playlists'), {
       name: name.trim(),
       slug,
       userId,
       songIds: [],
       coverColor,
+      sortOrder: maxSortOrder + 1,
       createdAt: serverTimestamp(),
     });
     await loadPlaylists();
@@ -165,6 +176,30 @@ export function usePlaylists() {
     await reorderPlaylistSongs(playlistId, ids);
   };
 
+  const reorderPlaylists = async (orderedIds) => {
+    requireAdmin();
+    await Promise.all(
+      orderedIds.map((id, index) =>
+        updateDoc(doc(db, 'playlists', id), { sortOrder: index })
+      )
+    );
+    await loadPlaylists();
+  };
+
+  const setPlaylistPosition = async (playlistId, position) => {
+    requireAdmin();
+    const sorted = sortPlaylists(playlists);
+    const ids = sorted.map((p) => p.id);
+    const fromIndex = ids.indexOf(playlistId);
+    if (fromIndex === -1) return;
+    const toIndex = Math.max(0, Math.min(ids.length - 1, position - 1));
+    if (fromIndex === toIndex) return;
+    const nextIds = [...ids];
+    const [item] = nextIds.splice(fromIndex, 1);
+    nextIds.splice(toIndex, 0, item);
+    await reorderPlaylists(nextIds);
+  };
+
   const getPlaylistById = (id) => playlists.find((p) => p.id === id);
 
   const getPlaylistBySlug = (slugOrId) => {
@@ -190,6 +225,8 @@ export function usePlaylists() {
     removeSongFromPlaylist,
     reorderPlaylistSongs,
     moveSongInPlaylist,
+    reorderPlaylists,
+    setPlaylistPosition,
     getPlaylistById,
     getPlaylistBySlug,
   };

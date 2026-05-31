@@ -19,7 +19,7 @@ import PianoChordCard from './PianoChordCard';
 export default function ChordViewer({
   content,
   language = 'he',
-  fontSize = 18,
+  fontSize = 16,
   fontFamily = 'Rubik',
 }) {
   const theme = useTheme();

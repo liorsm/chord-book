@@ -20,9 +20,8 @@ import { transposeContent, simplifyChords } from '../utils/chords';
 import { detectLanguage } from '../utils/direction';
 import { editSongPath } from '../utils/routes';
 import { findArtistSlugForSong } from '../utils/artists';
-
-const MIN_SEMITONES = -6;
-const MAX_SEMITONES = 6;
+import { useSongTranspose } from '../hooks/useSongTranspose';
+import { MIN_SEMITONES, MAX_SEMITONES } from '../config/songPreferences';
 
 export default function SongPage() {
   const { slug } = useParams();
@@ -32,8 +31,8 @@ export default function SongPage() {
   const { playlists, addSongToPlaylist, createPlaylist } = usePlaylists();
 
   const song = getSongBySlug(slug);
-  const [semitones, setSemitones] = useState(0);
-  const [fontSize, setFontSize] = useState(18);
+  const [semitones, setSemitones] = useSongTranspose(slug);
+  const [fontSize, setFontSize] = useState(16);
   const [fontFamily, setFontFamily] = useState('Rubik');
   const [scrollSpeed, setScrollSpeed] = useState(0);
   const [playlistDialogOpen, setPlaylistDialogOpen] = useState(false);
@@ -42,8 +41,7 @@ export default function SongPage() {
   const [chordsSimplified, setChordsSimplified] = useState(false);
 
   useEffect(() => {
-    setSemitones(0);
-    setFontSize(18);
+    setFontSize(16);
     setFontFamily('Rubik');
     setScrollSpeed(0);
     setYoutubeOpen(false);

@@ -338,7 +338,7 @@ export default function ActionBar({
   semitones = 0,
   onTransposeUp,
   onTransposeDown,
-  fontSize = 18,
+  fontSize = 16,
   fontFamily = 'Rubik',
   onFontSizeChange,
   onFontFamilyChange,
