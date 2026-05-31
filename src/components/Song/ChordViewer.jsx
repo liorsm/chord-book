@@ -1,17 +1,14 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Portal from '@mui/material/Portal';
 import Fade from '@mui/material/Fade';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { detectSections } from '../../utils/chords';
 import { formatSongContentToHtml } from '../../utils/songRender';
 import { splitSongContentForColumns } from '../../utils/songColumnSplit';
 import {
   getTextDirection,
   getTextAlign,
-  getReadingAlignItems,
   getOppositeHorizontalStyle,
 } from '../../utils/direction';
 import PianoChordCard from './PianoChordCard';
@@ -21,6 +18,7 @@ export default function ChordViewer({
   language = 'he',
   fontSize = 16,
   fontFamily = 'Rubik',
+  columnsExpanded = true,
 }) {
   const theme = useTheme();
   const mdUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -31,8 +29,6 @@ export default function ChordViewer({
   const direction = getTextDirection(language);
   const textAlign = getTextAlign(language);
 
-  const sections = detectSections(content);
-
   const bookColumnCount = lgUp ? 3 : mdUp ? 2 : 1;
 
   const columnSplit = useMemo(() => {
@@ -40,7 +36,8 @@ export default function ChordViewer({
     return splitSongContentForColumns(content, bookColumnCount);
   }, [bookColumnCount, content]);
 
-  const useBookColumns = Boolean(columnSplit?.parts?.[1]?.trim());
+  const useBookColumns =
+    columnsExpanded && Boolean(columnSplit?.parts?.[1]?.trim());
 
   const html = useMemo(
     () => formatSongContentToHtml(content, theme, direction),
@@ -178,23 +175,6 @@ export default function ChordViewer({
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, pb: 4 }}>
-      {sections.length > 0 && (
-        <Box
-          dir={direction}
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1,
-            mb: 2,
-            justifyContent: getReadingAlignItems(),
-          }}
-        >
-          {sections.map((s, i) => (
-            <Chip key={`${s}-${i}`} label={s} size="small" color="primary" variant="outlined" />
-          ))}
-        </Box>
-      )}
-
       <Box sx={{ position: 'relative' }}>
         <Box
           ref={contentRef}

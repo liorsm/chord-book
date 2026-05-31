@@ -165,14 +165,3 @@ export function extractUniqueChords(content) {
   }
   return [...chords];
 }
-
-export function detectSections(content) {
-  const sections = [];
-  const regex =
-    /\[(Intro|Verse|Chorus|Bridge|Outro|Pre-Chorus|סולו|פזמון|בית|גשר|מעבר|פתיחה)[^\]]*\]/gi;
-  let m;
-  while ((m = regex.exec(content)) !== null) {
-    sections.push(m[1]);
-  }
-  return sections;
-}

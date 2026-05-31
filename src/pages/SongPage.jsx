@@ -23,6 +23,16 @@ import { findArtistSlugForSong } from '../utils/artists';
 import { useSongTranspose } from '../hooks/useSongTranspose';
 import { MIN_SEMITONES, MAX_SEMITONES } from '../config/songPreferences';
 
+const BOOK_COLUMNS_STORAGE_KEY = 'chordbook-book-columns-expanded';
+
+function loadBookColumnsExpanded() {
+  try {
+    return localStorage.getItem(BOOK_COLUMNS_STORAGE_KEY) !== 'false';
+  } catch {
+    return true;
+  }
+}
+
 export default function SongPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -39,6 +49,7 @@ export default function SongPage() {
   const [snack, setSnack] = useState('');
   const [youtubeOpen, setYoutubeOpen] = useState(false);
   const [chordsSimplified, setChordsSimplified] = useState(false);
+  const [columnsExpanded, setColumnsExpanded] = useState(loadBookColumnsExpanded);
 
   useEffect(() => {
     setFontSize(16);
@@ -115,6 +126,18 @@ export default function SongPage() {
         onScrollSpeedChange={setScrollSpeed}
         chordsSimplified={chordsSimplified}
         onToggleSimplifyChords={() => setChordsSimplified((v) => !v)}
+        columnsExpanded={columnsExpanded}
+        onToggleColumnsExpanded={() => {
+          setColumnsExpanded((v) => {
+            const next = !v;
+            try {
+              localStorage.setItem(BOOK_COLUMNS_STORAGE_KEY, String(next));
+            } catch {
+              // localStorage unavailable — ignore
+            }
+            return next;
+          });
+        }}
         language={language}
       />
 
@@ -133,6 +156,7 @@ export default function SongPage() {
             language={language}
             fontSize={fontSize}
             fontFamily={fontFamily}
+            columnsExpanded={columnsExpanded}
           />
         </Box>
         {youtubeOpen && youtubeVideoId && (
