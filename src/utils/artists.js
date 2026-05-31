@@ -65,3 +65,14 @@ export function filterSongsByArtist(songs, artist) {
   const key = normalizeArtistKey(artist.name);
   return songs.filter((s) => normalizeArtistKey(s.artist) === key);
 }
+
+/** slug לדף אמן מתוך שם האמן בשיר */
+export function findArtistSlugForSong(song, songs) {
+  const name = song?.artist?.trim();
+  if (!name || !songs?.length) return null;
+  const key = normalizeArtistKey(name);
+  const artist = deriveArtistsFromSongs(songs).find(
+    (a) => normalizeArtistKey(a.name) === key
+  );
+  return artist?.slug ?? null;
+}

@@ -24,6 +24,7 @@ export default function ChordViewer({
 }) {
   const theme = useTheme();
   const mdUp = useMediaQuery(theme.breakpoints.up('md'));
+  const lgUp = useMediaQuery(theme.breakpoints.up('lg'));
   const contentRef = useRef(null);
   const [selectedChord, setSelectedChord] = useState(null);
 
@@ -32,29 +33,34 @@ export default function ChordViewer({
 
   const sections = detectSections(content);
 
-  const columnSplit = useMemo(() => {
-    if (!mdUp) return null;
-    return splitSongContentForColumns(content);
-  }, [mdUp, content]);
+  const bookColumnCount = lgUp ? 3 : mdUp ? 2 : 1;
 
-  const useBookColumns = Boolean(columnSplit?.second?.trim());
+  const columnSplit = useMemo(() => {
+    if (bookColumnCount < 2) return null;
+    return splitSongContentForColumns(content, bookColumnCount);
+  }, [bookColumnCount, content]);
+
+  const useBookColumns = Boolean(columnSplit?.parts?.[1]?.trim());
 
   const html = useMemo(
     () => formatSongContentToHtml(content, theme, direction),
     [content, theme, direction]
   );
 
-  const htmlColumns = useMemo(() => {
+  const htmlColumnParts = useMemo(() => {
     if (!useBookColumns || !columnSplit) return null;
-    return {
-      first: formatSongContentToHtml(columnSplit.first, theme, direction),
-      second: formatSongContentToHtml(columnSplit.second, theme, direction),
-    };
+    return columnSplit.parts.map((part) =>
+      formatSongContentToHtml(part, theme, direction)
+    );
   }, [useBookColumns, columnSplit, theme, direction]);
 
-  const htmlForEffects = htmlColumns
-    ? `${htmlColumns.first}${htmlColumns.second}`
-    : html;
+  /** RTL book spread: first chunk on the right; LTR keeps natural left-to-right order */
+  const htmlColumnsDisplay = useMemo(() => {
+    if (!htmlColumnParts) return null;
+    return direction === 'rtl' ? [...htmlColumnParts].reverse() : htmlColumnParts;
+  }, [htmlColumnParts, direction]);
+
+  const htmlForEffects = htmlColumnParts ? htmlColumnParts.join('') : html;
 
   const isDark = theme.palette.mode === 'dark';
   const chordColor = isDark ? '#60a5fa' : '#2563eb';
@@ -196,37 +202,28 @@ export default function ChordViewer({
           dir={direction}
           sx={contentSx}
         >
-          {useBookColumns && htmlColumns ? (
+          {useBookColumns && htmlColumnsDisplay ? (
             <Box
               className="song-book-spread"
               dir="ltr"
               sx={{
                 display: 'flex',
-                gap: 3,
+                gap: { md: 2, lg: 3 },
                 alignItems: 'flex-start',
                 width: '100%',
               }}
             >
-              <Box
-                className="song-book-column song-book-column--start"
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  pr: 1.5,
-                  borderRight: 1,
-                  borderColor: 'divider',
-                }}
-                dangerouslySetInnerHTML={{ __html: htmlColumns.second }}
-              />
-              <Box
-                className="song-book-column song-book-column--end"
-                sx={{
-                  flex: 1,
-                  minWidth: 0,
-                  pl: 1.5,
-                }}
-                dangerouslySetInnerHTML={{ __html: htmlColumns.first }}
-              />
+              {htmlColumnsDisplay.map((columnHtml, index) => (
+                <Box
+                  key={index}
+                  className={`song-book-column song-book-column--${index}`}
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: columnHtml }}
+                />
+              ))}
             </Box>
           ) : (
             <Box

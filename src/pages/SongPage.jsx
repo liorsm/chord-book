@@ -12,12 +12,14 @@ import YouTubeEmbed from '../components/Song/YouTubeEmbed';
 import { parseYouTubeVideoId } from '../utils/youtube';
 import AddToPlaylistDialog from '../components/Song/AddToPlaylistDialog';
 import MoreSongsByArtist from '../components/Song/MoreSongsByArtist';
+import SongHeroTags from '../components/Song/SongHeroTags';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useAuth } from '../contexts/AuthContext';
 import { transposeContent, simplifyChords } from '../utils/chords';
 import { detectLanguage } from '../utils/direction';
 import { editSongPath } from '../utils/routes';
+import { findArtistSlugForSong } from '../utils/artists';
 
 const MIN_SEMITONES = -6;
 const MAX_SEMITONES = 6;
@@ -67,6 +69,16 @@ export default function SongPage() {
     if (detected === 'en' && /[\u0590-\u05FF]/.test(text)) return 'he';
     return detected;
   }, [song?.title, song?.artist, song?.content]);
+
+  const artistSlug = useMemo(
+    () => (song ? findArtistSlugForSong(song, songs) : null),
+    [song, songs]
+  );
+
+  const songPlaylists = useMemo(
+    () => playlists.filter((p) => (p.songIds || []).includes(song?.id)),
+    [playlists, song?.id]
+  );
 
   if (loading && !song) {
     return (
@@ -129,6 +141,12 @@ export default function SongPage() {
           <YouTubeEmbed videoId={youtubeVideoId} title={song.title} autoplay />
         )}
       </Box>
+
+      <SongHeroTags
+        artistName={song.artist}
+        artistSlug={artistSlug}
+        playlists={songPlaylists}
+      />
 
       <MoreSongsByArtist song={song} songs={songs} />
 
