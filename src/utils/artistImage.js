@@ -83,9 +83,12 @@ export function resolvePlaylistCoverColor(coverColor, fallbackKey) {
   return getGradientForArtist(fallbackKey);
 }
 
-/** Semi-transparent overlay on playlist cover photos (same feel as song hero). */
-export const PLAYLIST_COVER_IMAGE_OVERLAY =
+/** Semi-transparent gradient over hero / cover backgrounds (song, artist, playlist). */
+export const HERO_GRADIENT_OVERLAY =
   'linear-gradient(to bottom, rgba(81, 181, 229, 0.5) 0%, rgba(74, 140, 230, 0.5) 35%, rgba(83, 86, 224, 0.5) 65%, rgba(125, 38, 223, 0.5) 100%)';
+
+/** @deprecated Use HERO_GRADIENT_OVERLAY */
+export const PLAYLIST_COVER_IMAGE_OVERLAY = HERO_GRADIENT_OVERLAY;
 
 /** Layered backgrounds for playlist cards (base gradient + soft highlight). */
 export function getPlaylistCoverBackground(coverColor, fallbackKey) {

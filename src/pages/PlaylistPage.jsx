@@ -8,6 +8,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SongCard from '../components/Song/SongCard';
+import PageHeroShell from '../components/common/PageHeroShell';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useSongs } from '../hooks/useSongs';
 import { useAuth } from '../contexts/AuthContext';
@@ -53,19 +54,16 @@ export default function PlaylistPage() {
 
   return (
     <Box>
-      <Box
-        sx={{
-          minHeight: { xs: 200, md: 260 },
-          ...(coverImageUrl
+      <PageHeroShell
+        backgroundSx={
+          coverImageUrl
             ? artistImageBackgroundStyle(coverImageUrl)
             : {
                 backgroundImage: getPlaylistCoverBackground(playlist.coverColor, fallbackKey),
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-              }),
-          display: 'flex',
-          alignItems: 'flex-end',
-        }}
+              }
+        }
       >
         <Container maxWidth="lg" sx={{ py: 4, width: '100%' }}>
           <Box
@@ -120,7 +118,7 @@ export default function PlaylistPage() {
             {playlistSongs.length} שירים
           </Typography>
         </Container>
-      </Box>
+      </PageHeroShell>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>

@@ -6,6 +6,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import SongCard from '../components/Song/SongCard';
+import PageHeroShell from '../components/common/PageHeroShell';
 import { useArtists } from '../hooks/useArtists';
 import { getGradientForArtist } from '../utils/artistImage';
 import { artistImageBackgroundStyle } from '../utils/artistImagePosition';
@@ -39,17 +40,14 @@ export default function ArtistPage() {
 
   return (
     <Box>
-      <Box
-        sx={{
-          minHeight: { xs: 200, md: 260 },
-          ...(artist.imageUrl
+      <PageHeroShell
+        backgroundSx={
+          artist.imageUrl
             ? artistImageBackgroundStyle(artist.imageUrl, artist.imagePositionY)
-            : { background: getGradientForArtist(artist.name) }),
-          display: 'flex',
-          alignItems: 'flex-end',
-        }}
+            : { background: getGradientForArtist(artist.name) }
+        }
       >
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="lg" sx={{ py: 4, width: '100%' }}>
           <Button
             component={RouterLink}
             to="/artists"
@@ -72,7 +70,7 @@ export default function ArtistPage() {
             {songs.length} שירים
           </Typography>
         </Container>
-      </Box>
+      </PageHeroShell>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
