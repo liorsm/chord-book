@@ -199,6 +199,7 @@ export default function ChordViewer({
           {useBookColumns && htmlColumns ? (
             <Box
               className="song-book-spread"
+              dir="ltr"
               sx={{
                 display: 'flex',
                 gap: 3,
@@ -211,7 +212,9 @@ export default function ChordViewer({
                 sx={{
                   flex: 1,
                   minWidth: 0,
-                  pl: 1.5,
+                  pr: 1.5,
+                  borderRight: 1,
+                  borderColor: 'divider',
                 }}
                 dangerouslySetInnerHTML={{ __html: htmlColumns.first }}
               />
@@ -220,9 +223,7 @@ export default function ChordViewer({
                 sx={{
                   flex: 1,
                   minWidth: 0,
-                  pr: 1.5,
-                  borderRight: 1,
-                  borderColor: 'divider',
+                  pl: 1.5,
                 }}
                 dangerouslySetInnerHTML={{ __html: htmlColumns.second }}
               />
