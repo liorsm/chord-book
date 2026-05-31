@@ -12,12 +12,6 @@
       "src": "chordbook-logo.png",
       "sizes": "532x521",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "favicon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
