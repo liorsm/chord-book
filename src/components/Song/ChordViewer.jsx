@@ -194,21 +194,21 @@ export default function ChordViewer({
           ref={contentRef}
           className="song-content"
           dir={direction}
-          sx={
-            useBookColumns
-              ? {
-                  display: 'flex',
-                  gap: 3,
-                  alignItems: 'flex-start',
-                  ...contentSx,
-                }
-              : contentSx
-          }
+          sx={contentSx}
         >
           {useBookColumns && htmlColumns ? (
-            <>
+            <Box
+              className="song-book-spread"
+              dir="ltr"
+              sx={{
+                display: 'flex',
+                gap: 3,
+                alignItems: 'flex-start',
+                width: '100%',
+              }}
+            >
               <Box
-                className="song-book-column"
+                className="song-book-column song-book-column--start"
                 sx={{
                   flex: 1,
                   minWidth: 0,
@@ -219,11 +219,11 @@ export default function ChordViewer({
                 dangerouslySetInnerHTML={{ __html: htmlColumns.first }}
               />
               <Box
-                className="song-book-column"
+                className="song-book-column song-book-column--end"
                 sx={{ flex: 1, minWidth: 0, pl: 1.5 }}
                 dangerouslySetInnerHTML={{ __html: htmlColumns.second }}
               />
-            </>
+            </Box>
           ) : (
             <Box
               className="song-book-single"
