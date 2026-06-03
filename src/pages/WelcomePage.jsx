@@ -9,6 +9,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import HeroSection from '../components/common/HeroSection';
 import { grantSiteAccess, verifySitePassword } from '../utils/siteAccess';
+import { logSiteAccessEntry } from '../utils/siteAccessLog';
 
 export default function WelcomePage({ onAccessGranted }) {
   const [password, setPassword] = useState('');
@@ -34,6 +35,7 @@ export default function WelcomePage({ onAccessGranted }) {
     }
 
     grantSiteAccess();
+    logSiteAccessEntry().catch(() => {});
     onAccessGranted?.();
     setSubmitting(false);
   }

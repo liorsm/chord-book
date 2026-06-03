@@ -34,6 +34,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
+import { useSiteAccessLogs } from '../hooks/useSiteAccessLogs';
 import { useAuth } from '../contexts/AuthContext';
 import ManageAuthPanel from '../components/admin/ManageAuthPanel';
 import { songPath, playlistPath, editSongPath } from '../utils/routes';
@@ -71,6 +72,8 @@ export default function ManagePage() {
     setMsgSeverity(severity);
   };
 
+  const { logs: accessLogs, loading: accessLogsLoading, reload: reloadAccessLogs } =
+    useSiteAccessLogs({ enabled: tab === 2 });
   const { songs, loading: songsLoading, deleteSong, loadSongs } = useSongs();
   const {
     playlists,
@@ -290,6 +293,7 @@ export default function ManagePage() {
         <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="fullWidth">
           <Tab label={`שירים (${songs.length})`} />
           <Tab label={`פלייליסטים (${playlists.length})`} />
+          <Tab label="יומן כניסות" />
         </Tabs>
 
         {loading ? (
@@ -567,6 +571,99 @@ export default function ManagePage() {
                     {playlistSongs.length === 0 && (
                       <Typography color="text.secondary" textAlign="center" py={2}>
                         הפלייליסט ריק. הוסף שירים מדף השיר.
+                      </Typography>
+                    )}
+                  </List>
+                </Box>
+              )}
+            </TabPanel>
+
+            <TabPanel value={tab} index={2}>
+              <Box sx={{ px: 2, pb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  כניסות מוצלחות עם סיסמת האתר (IP, דפדפן, מסך)
+                </Typography>
+                <Button size="small" onClick={reloadAccessLogs} disabled={accessLogsLoading}>
+                  רענן
+                </Button>
+              </Box>
+              {accessLogsLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <Box dir="ltr" style={{ direction: 'ltr', textAlign: 'left' }} sx={{ px: 2, pb: 2 }}>
+                  <List disablePadding>
+                    {accessLogs.map((entry) => (
+                      <ListItem
+                        key={entry.id}
+                        divider
+                        alignItems="flex-start"
+                        sx={{ px: 0 }}
+                      >
+                        <ListItemText
+                          style={{ textAlign: 'left' }}
+                          sx={{
+                            m: 0,
+                            '& .MuiListItemText-primary, & .MuiListItemText-secondary': {
+                              textAlign: 'left',
+                            },
+                          }}
+                          slotProps={{
+                            primary: { style: { textAlign: 'left' } },
+                            secondary: { style: { textAlign: 'left' } },
+                          }}
+                          primary={`${entry.atLabel} · ${entry.ip}`}
+                          secondary={
+                            <>
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                display="block"
+                                style={{ textAlign: 'left' }}
+                                sx={{ wordBreak: 'break-word' }}
+                              >
+                                {entry.userAgent}
+                              </Typography>
+                              <Typography
+                                component="span"
+                                variant="caption"
+                                color="text.secondary"
+                                display="block"
+                                style={{ textAlign: 'left' }}
+                              >
+                                {[
+                                  entry.platform,
+                                  entry.language,
+                                  entry.screen,
+                                  entry.viewport,
+                                  entry.timeZone,
+                                  entry.connectionType,
+                                  entry.path,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · ')}
+                              </Typography>
+                              {entry.referrer && (
+                                <Typography
+                                  component="span"
+                                  variant="caption"
+                                  color="text.disabled"
+                                  display="block"
+                                  style={{ textAlign: 'left' }}
+                                  sx={{ wordBreak: 'break-word' }}
+                                >
+                                  referrer: {entry.referrer}
+                                </Typography>
+                              )}
+                            </>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                    {accessLogs.length === 0 && (
+                      <Typography textAlign="center" py={4} color="text.secondary" dir="rtl">
+                        עדיין אין רשומות. פרסמו את firestore.rules ונסו כניסה עם הסיסמה.
                       </Typography>
                     )}
                   </List>
