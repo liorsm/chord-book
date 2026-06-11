@@ -8,12 +8,45 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { parseUserAgent } from '../utils/siteAccessLogParse';
 
-function formatAt(value) {
+function formatLoginAt(value) {
   if (!value) return '—';
   const date = value instanceof Timestamp ? value.toDate() : new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleString('he-IL');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  return `${dd}/${mm}/${yyyy}, ${hh}:${min}`;
+}
+
+function normalizeLog(doc) {
+  const data = doc.data();
+
+  if (data.deviceType && data.os && data.browser) {
+    return {
+      id: doc.id,
+      atLabel: formatLoginAt(data.at),
+      deviceType: data.deviceType,
+      os: data.os,
+      browser: data.browser,
+      city: data.city || '—',
+      ip: data.ip || '—',
+    };
+  }
+
+  const parsed = parseUserAgent(data.userAgent || '');
+  return {
+    id: doc.id,
+    atLabel: formatLoginAt(data.at),
+    deviceType: parsed.deviceType,
+    os: parsed.os,
+    browser: parsed.browser,
+    city: data.city || '—',
+    ip: data.ip || '—',
+  };
 }
 
 export function useSiteAccessLogs({ enabled = true, max = 100 } = {}) {
@@ -30,25 +63,7 @@ export function useSiteAccessLogs({ enabled = true, max = 100 } = {}) {
         limit(max)
       );
       const snap = await getDocs(q);
-      setLogs(
-        snap.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            atLabel: formatAt(data.at),
-            ip: data.ip || '—',
-            userAgent: data.userAgent || '—',
-            platform: data.platform || '',
-            language: data.language || '',
-            screen: data.screen || '',
-            viewport: data.viewport || '',
-            timeZone: data.timeZone || '',
-            referrer: data.referrer || '',
-            path: data.path || '',
-            connectionType: data.connectionType || '',
-          };
-        })
-      );
+      setLogs(snap.docs.map(normalizeLog));
     } catch {
       setLogs([]);
     } finally {
