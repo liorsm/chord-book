@@ -474,7 +474,7 @@ export default function ActionBar({
               }}
             >
               <LabeledAction
-                lines={["העלאת", "טון"]}
+                lines={["הורדת", "טון"]}
                 onClick={onTransposeUp}
                 disabled={semitones >= 6}
               >
@@ -498,7 +498,7 @@ export default function ActionBar({
               </Typography>
 
               <LabeledAction
-                lines={["הורדת", "טון"]}
+                lines={["העלאת", "טון"]}
                 onClick={onTransposeDown}
                 disabled={semitones <= -6}
               >
