@@ -36,7 +36,7 @@ export default function PlaylistPage() {
     );
   }
 
-  if (!playlist) {
+  if (!playlist || (playlist.hidden && !isAdmin)) {
     return (
       <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
         <Typography variant="h5" gutterBottom>

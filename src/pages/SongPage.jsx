@@ -85,8 +85,12 @@ export default function SongPage() {
   );
 
   const songPlaylists = useMemo(
-    () => playlists.filter((p) => (p.songIds || []).includes(song?.id)),
-    [playlists, song?.id]
+    () =>
+      playlists.filter(
+        (p) =>
+          (p.songIds || []).includes(song?.id) && (!p.hidden || isAdmin)
+      ),
+    [playlists, song?.id, isAdmin]
   );
 
   if (loading && !song) {

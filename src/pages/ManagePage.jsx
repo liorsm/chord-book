@@ -32,6 +32,8 @@ import AddIcon from '@mui/icons-material/Add';
 import LogoutIcon from '@mui/icons-material/Logout';
 import DownloadIcon from '@mui/icons-material/Download';
 import UploadIcon from '@mui/icons-material/Upload';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { useSongs } from '../hooks/useSongs';
 import { usePlaylists } from '../hooks/usePlaylists';
 import { useSiteAccessLogs } from '../hooks/useSiteAccessLogs';
@@ -110,6 +112,11 @@ export default function ManagePage() {
     await deletePlaylist(pl.id);
     if (selectedPlaylistId === pl.id) setSelectedPlaylistId(null);
     notify('הפלייליסט נמחק');
+  };
+
+  const handleTogglePlaylistVisibility = async (pl) => {
+    await updatePlaylist(pl.id, { hidden: !pl.hidden });
+    notify(pl.hidden ? 'הפלייליסט מוצג כעת בדף הבית' : 'הפלייליסט הוסתר מדף הבית');
   };
 
   const handleRenamePlaylist = async () => {
@@ -401,11 +408,13 @@ export default function ManagePage() {
                     onDragOver={(e) => e.preventDefault()}
                     onDrop={() => handlePlaylistDrop(pl.id)}
                     sx={{
-                      opacity: dragPlaylistId === pl.id ? 0.55 : 1,
+                      opacity: dragPlaylistId === pl.id ? 0.55 : pl.hidden ? 0.65 : 1,
                       bgcolor:
                         dragPlaylistId && dragPlaylistId !== pl.id
                           ? 'action.hover'
-                          : undefined,
+                          : pl.hidden
+                            ? 'action.selected'
+                            : undefined,
                     }}
                   >
                     <Box
@@ -452,10 +461,21 @@ export default function ManagePage() {
                       <PlaylistPlayIcon sx={{ mr: 2, color: 'primary.main' }} />
                       <ListItemText
                         primary={pl.name}
-                        secondary={`${pl.songIds?.length || 0} שירים`}
+                        secondary={
+                          pl.hidden
+                            ? `מוסתר · ${pl.songIds?.length || 0} שירים`
+                            : `${pl.songIds?.length || 0} שירים`
+                        }
                       />
                     </ListItemButton>
                     <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        title={pl.hidden ? 'הצג בדף הבית' : 'הסתר מדף הבית'}
+                        onClick={() => handleTogglePlaylistVisibility(pl)}
+                      >
+                        {pl.hidden ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
                       <IconButton
                         edge="end"
                         onClick={() => navigate(playlistPath(pl))}

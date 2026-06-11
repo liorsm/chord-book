@@ -11,7 +11,7 @@ import SongCard from "../components/Song/SongCard";
 import PlaylistCard from "../components/Playlist/PlaylistCard";
 import HeroSection from "../components/common/HeroSection";
 import { useSongs } from "../hooks/useSongs";
-import { usePlaylists } from "../hooks/usePlaylists";
+import { usePlaylists, filterVisiblePlaylists } from "../hooks/usePlaylists";
 import { shuffleArray } from "../utils/randomSong";
 
 const SONGS_PER_PAGE = 10;
@@ -26,6 +26,10 @@ export default function HomePage() {
   } = usePlaylists();
 
   const displaySongs = useMemo(() => shuffleArray(songs), [songs]);
+  const visiblePlaylists = useMemo(
+    () => filterVisiblePlaylists(playlists),
+    [playlists]
+  );
 
   const totalPages = Math.ceil(displaySongs.length / SONGS_PER_PAGE) || 1;
 
@@ -74,7 +78,7 @@ export default function HomePage() {
             <CircularProgress size={28} />
           </Box>
         ) : (
-          playlists.length > 0 && (
+          visiblePlaylists.length > 0 && (
             <Box sx={{ mb: 5 }}>
               <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>
                 פלייליסטים
@@ -91,7 +95,7 @@ export default function HomePage() {
                   gap: { xs: 2, lg: 1.5 },
                 }}
               >
-                {playlists.map((playlist) => (
+                {visiblePlaylists.map((playlist) => (
                   <PlaylistCard key={playlist.id} playlist={playlist} />
                 ))}
               </Box>

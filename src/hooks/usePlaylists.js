@@ -16,6 +16,14 @@ import {
 } from '../utils/artistImage';
 import { generatePlaylistSlug, resolveUniqueSlug } from '../utils/slug';
 
+export function isPlaylistVisible(playlist) {
+  return !playlist?.hidden;
+}
+
+export function filterVisiblePlaylists(list) {
+  return list.filter(isPlaylistVisible);
+}
+
 export function sortPlaylists(list) {
   return [...list].sort((a, b) => {
     const orderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
