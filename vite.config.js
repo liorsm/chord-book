@@ -29,9 +29,21 @@ export default defineConfig({
         icons: [
           {
             src: 'chordbook-logo.png',
-            sizes: '532x521',
+            sizes: '192x192',
             type: 'image/png',
-            purpose: 'any maskable',
+            purpose: 'any',
+          },
+          {
+            src: 'chordbook-logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: 'chordbook-logo.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },
