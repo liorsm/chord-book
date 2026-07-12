@@ -1,24 +1,28 @@
-import { Outlet } from 'react-router-dom';
-import Box from '@mui/material/Box';
-import Snackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
-import Header from './Header';
-import MobileNav from './MobileNav';
-import { useAuth } from '../../contexts/AuthContext';
+import { Outlet } from "react-router-dom";
+import Box from "@mui/material/Box";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import Header from "./Header";
+import MobileNav from "./MobileNav";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Layout() {
   const { authNotice, clearAuthNotice } = useAuth();
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header />
       <Snackbar
         open={Boolean(authNotice)}
         autoHideDuration={6000}
         onClose={clearAuthNotice}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <Alert onClose={clearAuthNotice} severity="error" sx={{ width: '100%' }}>
+        <Alert
+          onClose={clearAuthNotice}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
           {authNotice}
         </Alert>
       </Snackbar>
@@ -27,6 +31,8 @@ export default function Layout() {
         sx={{
           flex: 1,
           pb: { xs: 10, md: 4 },
+          background:
+            "linear-gradient(180deg, rgba(23,18,46,0.5) 0%, rgba(33,24,68,0.8) 100%)",
         }}
       >
         <Outlet />
