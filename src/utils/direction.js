@@ -1,4 +1,4 @@
-import { findChordsInText } from './chordSymbol';
+import { findChordsInText } from './chordSymbol.js';
 
 /** מסיר אקורדים לפני ספירת תווים לזיהוי שפה */
 export function stripChordsFromText(text) {

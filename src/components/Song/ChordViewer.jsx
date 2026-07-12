@@ -235,8 +235,8 @@ export default function ChordViewer({
                 top: { xs: 'auto', md: 100 },
                 bottom: { xs: 24, md: 'auto' },
                 transform: { xs: 'translateX(-50%)', md: 'none' },
-                width: { xs: 'calc(100% - 32px)', sm: 340 },
-                maxWidth: 360,
+                width: { xs: 'calc(100% - 32px)', sm: 350 },
+                maxWidth: 350,
                 pointerEvents: 'auto',
               }}
               style={mdUp ? getOppositeHorizontalStyle(language, 24) : undefined}

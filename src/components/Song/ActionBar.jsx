@@ -24,6 +24,10 @@ import {
   getOppositeHorizontalStyle,
   getOppositePanelPosition,
 } from "../../utils/direction";
+import {
+  MIN_SEMITONES,
+  MAX_SEMITONES,
+} from "../../config/songPreferences";
 
 const FONT_OPTIONS = [
   { value: "Rubik", label: "Rubik" },
@@ -474,9 +478,9 @@ export default function ActionBar({
               }}
             >
               <LabeledAction
-                lines={["הורדת", "טון"]}
+                lines={["העלאת", "טון"]}
                 onClick={onTransposeUp}
-                disabled={semitones >= 6}
+                disabled={semitones >= MAX_SEMITONES}
               >
                 <ChevronRightIcon fontSize="small" />
               </LabeledAction>
@@ -498,9 +502,9 @@ export default function ActionBar({
               </Typography>
 
               <LabeledAction
-                lines={["העלאת", "טון"]}
+                lines={["הורדת", "טון"]}
                 onClick={onTransposeDown}
-                disabled={semitones <= -6}
+                disabled={semitones <= MIN_SEMITONES}
               >
                 <ChevronLeftIcon fontSize="small" />
               </LabeledAction>

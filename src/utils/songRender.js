@@ -2,8 +2,8 @@ import {
   isChordToken,
   CHORD_CANDIDATE_REGEX,
   chordFromMatch,
-} from "./chordSymbol";
-import { stripChordsFromText } from "./direction";
+} from "./chordSymbol.js";
+import { stripChordsFromText } from "./direction.js";
 
 const HEBREW_RE = /[\u0590-\u05FF]/;
 const SECTION_LABEL_RE =
@@ -54,8 +54,16 @@ function formatStandaloneChords(text, inlineLtr) {
   return out;
 }
 
-/** מדגיש אקורדים בשורה; תגיות [פתיחה] וכו' לא נחשבות אקורד */
-export function formatLineWithChords(line, theme, { inlineLtr = false } = {}) {
+/**
+ * מדגיש אקורדים בשורה.
+ * כלל: אקורדים חופשיים (Am, A, C/G…) רק כש־allowStandalone=true (שורת אקורדים).
+ * בשורות מילים — רק אקורדים בסוגריים [Am], כדי לא לבלבל עם "I Am", "A whole" וכו'.
+ */
+export function formatLineWithChords(
+  line,
+  theme,
+  { inlineLtr = false, allowStandalone = true } = {},
+) {
   const parts = line.split(/(\[[^\]]+\])/g);
   return parts
     .map((part) => {
@@ -67,12 +75,17 @@ export function formatLineWithChords(line, theme, { inlineLtr = false } = {}) {
         }
         return escapeHtml(part);
       }
+      if (!allowStandalone) return escapeHtml(part);
       return formatStandaloneChords(part, inlineLtr);
     })
     .join("");
 }
 
-function isChordLine(line) {
+/**
+ * שורת אקורדים בלבד — אחרי הסרת אקורדים לא נשאר טקסט (מילים).
+ * "A whole new world" / "I Am is me" אינן שורות אקורדים.
+ */
+export function isChordLine(line) {
   const trimmed = line.trim();
   if (!trimmed) return false;
   if (HEBREW_RE.test(trimmed)) return false;
@@ -92,7 +105,7 @@ function isChordLine(line) {
     /[|/\-–—:\s()[\]{}]/g,
     "",
   );
-  return !HEBREW_RE.test(leftover);
+  return leftover.length === 0;
 }
 
 function isSectionLine(line) {
@@ -118,8 +131,8 @@ export function classifyLine(line) {
   if (/^\*\*[^*]+\*\*$/.test(trimmed)) return "heading";
   if (isSectionLine(trimmed)) return "section";
   if (isChordLine(trimmed)) return "chords";
-  if (HEBREW_RE.test(trimmed)) return "lyric";
   if (isChordToken(trimmed)) return "chords";
+  if (/[A-Za-z\u0590-\u05FF]/.test(trimmed)) return "lyric";
   return "other";
 }
 
@@ -148,13 +161,13 @@ export function formatSongContentToHtml(content, theme, layoutDir = "rtl") {
         }
 
         case "chords":
-          return `<div class="song-line song-chords" dir="ltr" style="text-align:${align}">${formatLineWithChords(line, { inlineLtr: false })}</div>`;
+          return `<div class="song-line song-chords" dir="ltr" style="text-align:${align}">${formatLineWithChords(line, null, { inlineLtr: false, allowStandalone: true })}</div>`;
 
         case "lyric":
-          return `<div class="song-line song-lyric" dir="${isRtl ? "rtl" : "ltr"}" style="text-align:${align}">${formatLineWithChords(line, { inlineLtr: isRtl })}</div>`;
+          return `<div class="song-line song-lyric" dir="${isRtl ? "rtl" : "ltr"}" style="text-align:${align}">${formatLineWithChords(line, null, { inlineLtr: isRtl, allowStandalone: false })}</div>`;
 
         default:
-          return `<div class="song-line song-other" dir="${isRtl ? "rtl" : "ltr"}" style="text-align:${align}">${formatLineWithChords(line, { inlineLtr: isRtl })}</div>`;
+          return `<div class="song-line song-other" dir="${isRtl ? "rtl" : "ltr"}" style="text-align:${align}">${formatLineWithChords(line, null, { inlineLtr: isRtl, allowStandalone: false })}</div>`;
       }
     })
     .join("");

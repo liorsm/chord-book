@@ -1,7 +1,7 @@
 import { get as getChord } from '@tonaljs/chord';
 import { chroma } from '@tonaljs/note';
-import { chordSymbolForParse } from './chordSymbol';
-import { normalizeRoot } from './chords';
+import { chordSymbolForParse } from './chordSymbol.js';
+import { normalizeRoot } from './chords.js';
 
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
@@ -24,12 +24,17 @@ function parseMainChordFallback(main) {
   if (/dim7/.test(suffix)) intervals = [0, 3, 6, 9];
   else if (/dim/.test(suffix)) intervals = [0, 3, 6];
   else if (/aug/.test(suffix)) intervals = [0, 4, 8];
+  else if (/m\(maj7\)|mmaj7|minmaj7/.test(suffix))
+    intervals = [0, 3, 7, 11];
   else if (/maj7|ma7/.test(suffix)) intervals = [0, 4, 7, 11];
   else if (/m7|min7/.test(suffix)) intervals = [0, 3, 7, 10];
-  else if (/7/.test(suffix)) intervals = [0, 4, 7, 10];
-  else if (/m(?!aj)|min/.test(suffix)) intervals = [0, 3, 7];
+  else if (/m6|min6/.test(suffix)) intervals = [0, 3, 7, 9];
+  else if (/add9/.test(suffix)) intervals = [0, 4, 7, 2];
   else if (/sus4/.test(suffix)) intervals = [0, 5, 7];
   else if (/sus2/.test(suffix)) intervals = [0, 2, 7];
+  else if (/7/.test(suffix)) intervals = [0, 4, 7, 10];
+  else if (/6/.test(suffix)) intervals = [0, 4, 7, 9];
+  else if (/m(?!aj)|min/.test(suffix)) intervals = [0, 3, 7];
   else intervals = [0, 4, 7];
 
   const semitones = intervals.map((i) => (rootSemi + i) % 12);
@@ -71,7 +76,47 @@ export function getChordSemitones(chord) {
   return [...new Set(semitones)];
 }
 
-/** טווח מקלדת (סמיטונים מוחלטים) שמכיל את כל תווי האקורד */
+/**
+ * Voicing סגור במצב יסודי: שורש למטה, שאר התווים מעליו בתוך אוקטבה.
+ */
+export function getChordVoicing(pitchClasses, baseOctave = 4) {
+  if (!pitchClasses?.length) return [];
+
+  const rootPc = pitchClasses[0] % 12;
+  const base = baseOctave * 12 + rootPc;
+  const rest = pitchClasses
+    .slice(1)
+    .map((pc) => {
+      let n = baseOctave * 12 + (pc % 12);
+      if (n <= base) n += 12;
+      return n;
+    })
+    .sort((a, b) => a - b);
+
+  return [base, ...rest];
+}
+
+/**
+ * תמיד 15 קלידים לבנים: Do → Do → Do (שתי אוקטבות).
+ * ה-voicing נשאר במצב יסודי בתוך הטווח.
+ */
+export function getKeyboardRangeForVoicing(voicing, baseOctave = 4) {
+  const octaveSpan = 25; // C .. C .. C  → 15 white keys
+  let start = baseOctave * 12;
+
+  if (voicing?.length) {
+    const max = Math.max(...voicing);
+    // אם האקורד בולט מעל הטווח — הזז אוקטבה למעלה
+    while (max >= start + octaveSpan) start += 12;
+    // אם האקורד מתחת לטווח — הזז אוקטבה למטה
+    const min = Math.min(...voicing);
+    while (min < start) start -= 12;
+  }
+
+  return { start, end: start + octaveSpan };
+}
+
+/** @deprecated העדף getKeyboardRangeForVoicing + getChordVoicing */
 export function getKeyboardRange(semitones) {
   if (!semitones.length) {
     return { start: 48, end: 72 };

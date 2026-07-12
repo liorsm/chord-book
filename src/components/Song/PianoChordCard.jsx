@@ -5,29 +5,39 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import {
   getChordSemitones,
-  getKeyboardRange,
+  getChordVoicing,
+  getKeyboardRangeForVoicing,
   buildKeyboardKeys,
   getWhiteKeyIndex,
   countWhiteKeys,
 } from '../../utils/pianoChords';
 
-const WHITE_W = 28;
-const BLACK_W = 18;
-const KEY_H = 88;
-const BLACK_H = 54;
+const KEY_H = 72;
+const BLACK_H = 44;
+const DOT_WHITE = 8;
+const DOT_BLACK = 6;
 
-function PianoKeys({ semitones, start, end }) {
-  const activeSet = new Set();
-  for (let semi = start; semi < end; semi += 1) {
-    if (semitones.includes(semi % 12)) activeSet.add(semi);
-  }
-
+/**
+ * מקלדת רוחב מלא — קלידים צרים יותר כדי להכניס שתי אוקטבות.
+ * left ב-style אינליין כי stylis-plugin-rtl הופך left↔right ב-sx.
+ */
+function PianoKeys({ activeSemis, start, end }) {
+  const activeSet = new Set(activeSemis);
   const keys = buildKeyboardKeys(start, end);
   const whiteCount = countWhiteKeys(start, end);
-  const width = whiteCount * WHITE_W;
+  const whitePct = 100 / whiteCount;
+  const blackPct = whitePct * 0.62;
 
   return (
-    <Box sx={{ position: 'relative', width, height: KEY_H, mx: 'auto' }}>
+    <Box
+      dir="ltr"
+      sx={{
+        position: 'relative',
+        width: '100%',
+        height: KEY_H,
+        direction: 'ltr',
+      }}
+    >
       {keys
         .filter((k) => !k.isBlack)
         .map((k) => {
@@ -36,29 +46,29 @@ function PianoKeys({ semitones, start, end }) {
           return (
             <Box
               key={`w-${k.semi}`}
+              style={{ left: `${wi * whitePct}%`, width: `calc(${whitePct}% - 1px)` }}
               sx={{
                 position: 'absolute',
-                left: wi * WHITE_W,
                 top: 0,
-                width: WHITE_W - 1,
                 height: KEY_H,
                 bgcolor: active ? '#fecaca' : '#fff',
                 border: '1px solid #cbd5e1',
-                borderRadius: '0 0 4px 4px',
+                borderRadius: '0 0 3px 3px',
                 boxSizing: 'border-box',
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                pb: '8px',
               }}
             >
               {active && (
                 <Box
                   sx={{
-                    position: 'absolute',
-                    bottom: 10,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 10,
-                    height: 10,
+                    width: DOT_WHITE,
+                    height: DOT_WHITE,
                     borderRadius: '50%',
                     bgcolor: '#ef4444',
+                    flexShrink: 0,
                   }}
                 />
               )}
@@ -73,29 +83,32 @@ function PianoKeys({ semitones, start, end }) {
           return (
             <Box
               key={`b-${k.semi}`}
+              style={{
+                left: `calc(${wi * whitePct}% - ${blackPct / 2}%)`,
+                width: `${blackPct}%`,
+              }}
               sx={{
                 position: 'absolute',
-                left: wi * WHITE_W - BLACK_W / 2,
                 top: 0,
-                width: BLACK_W,
                 height: BLACK_H,
                 bgcolor: active ? '#7f1d1d' : '#1e293b',
-                borderRadius: '0 0 3px 3px',
+                borderRadius: '0 0 2px 2px',
                 zIndex: 1,
                 boxSizing: 'border-box',
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+                pb: '5px',
               }}
             >
               {active && (
                 <Box
                   sx={{
-                    position: 'absolute',
-                    bottom: 6,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    width: 8,
-                    height: 8,
+                    width: DOT_BLACK,
+                    height: DOT_BLACK,
                     borderRadius: '50%',
                     bgcolor: '#ef4444',
+                    flexShrink: 0,
                   }}
                 />
               )}
@@ -107,21 +120,33 @@ function PianoKeys({ semitones, start, end }) {
 }
 
 export default function PianoChordCard({ chord, onClose }) {
-  const semitones = getChordSemitones(chord);
-  const { start, end } = getKeyboardRange(semitones);
+  const pitchClasses = getChordSemitones(chord);
+  const voicing = getChordVoicing(pitchClasses);
+  const { start, end } = getKeyboardRangeForVoicing(voicing);
 
   return (
     <Paper
       elevation={4}
+      dir="ltr"
       sx={{
-        width: { xs: '100%', sm: 320 },
+        width: '100%',
+        maxWidth: 350,
         flexShrink: 0,
         borderRadius: 2,
         overflow: 'hidden',
-        p: 2,
+        p: 1.5,
+        direction: 'ltr',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1, position: 'relative' }}>
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mb: 1,
+          position: 'relative',
+        }}
+      >
         <Typography
           variant="h5"
           sx={{ fontWeight: 800, color: '#ef4444', fontFamily: 'monospace' }}
@@ -132,7 +157,7 @@ export default function PianoChordCard({ chord, onClose }) {
           <IconButton
             size="small"
             onClick={onClose}
-            sx={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)' }}
+            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)' }}
             aria-label="סגור"
           >
             <CloseIcon fontSize="small" />
@@ -140,11 +165,16 @@ export default function PianoChordCard({ chord, onClose }) {
         )}
       </Box>
 
-      <Box sx={{ overflowX: 'auto', pb: 1 }}>
-        <PianoKeys semitones={semitones} start={start} end={end} />
+      <Box sx={{ width: '100%', direction: 'ltr' }} dir="ltr">
+        <PianoKeys activeSemis={voicing} start={start} end={end} />
       </Box>
 
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ display: 'block', textAlign: 'center', mt: 1 }}
+        dir="rtl"
+      >
         לחץ על אקורד אחר לעדכון
       </Typography>
     </Paper>

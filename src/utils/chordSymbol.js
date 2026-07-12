@@ -26,7 +26,9 @@ export function chordFromMatch(m) {
 
 const HEBREW_RE = /[\u0590-\u05FF]/;
 
-/** מסיר ספרת אוקטבה/מיקום (A#4 → A#, Bb3 → Bb) */
+/** ספרת מיקום ישראלית אחרי #/b בלבד (A#4, Bb3). לא 5/7/9 — אלה הרחבות אקורד. */
+const ISRAELI_OCTAVE_DIGIT = '[1-4]';
+
 function normalizeAccidentals(symbol) {
   return String(symbol)
     .replace(/\u266F/g, '#')
@@ -35,17 +37,52 @@ function normalizeAccidentals(symbol) {
     .replace(/♭/g, 'b');
 }
 
-export function stripOctaveMark(symbol) {
-  const trimmed = normalizeAccidentals(symbol).trim();
+/**
+ * מפריד ספרת מיקום ישראלית מיד אחרי accidental בשורש.
+ * A#4 → { base: 'A#', digit: '4' }; Bb3m → { base: 'Bbm', digit: '3' }; A#7 → ללא digit.
+ */
+export function splitOctaveMark(symbol) {
+  const trimmed = normalizeAccidentals(String(symbol).trim());
   const slashIdx = trimmed.indexOf('/');
-  const main = slashIdx > 0 ? trimmed.slice(0, slashIdx) : trimmed;
-  const bass = slashIdx > 0 ? trimmed.slice(slashIdx + 1) : null;
+  if (slashIdx > 0) {
+    const main = splitOctaveMark(trimmed.slice(0, slashIdx));
+    const bass = splitOctaveMark(trimmed.slice(slashIdx + 1));
+    return {
+      base: `${main.base}/${bass.base}`,
+      digit: null,
+      mainDigit: main.digit,
+      bassDigit: bass.digit,
+    };
+  }
 
-  const stripDigit = (part) => part.replace(/([#b])([0-46-8])$/i, '$1');
+  const re = new RegExp(
+    `^([A-Ga-g])([#b])(${ISRAELI_OCTAVE_DIGIT})(.*)$`,
+    'i'
+  );
+  const m = trimmed.match(re);
+  if (m) {
+    return { base: m[1] + m[2] + m[4], digit: m[3] };
+  }
+  return { base: trimmed, digit: null };
+}
 
-  const mainClean = stripDigit(main);
-  if (!bass) return mainClean;
-  return `${mainClean}/${stripDigit(bass)}`;
+/** מסיר ספרת אוקטבה/מיקום (A#4 → A#, Bb3 → Bb) */
+export function stripOctaveMark(symbol) {
+  return splitOctaveMark(symbol).base;
+}
+
+/** שורש מז'ור בודד בלי איכות (A, Bb, C#) — מסוכן כמילה באנגלית */
+export function isBareMajorRoot(str) {
+  const base = stripOctaveMark(String(str).trim());
+  return /^[A-G][#b]?$/i.test(base);
+}
+
+/** מחזיר digit אחרי accidental בשורש החדש (אם יש); אחרת משמיט */
+export function reattachOctaveDigit(chord, digit) {
+  if (!digit || !chord) return chord;
+  const m = String(chord).match(/^([A-G][#b])(.*)$/i);
+  if (!m) return chord;
+  return m[1] + digit + m[2];
 }
 
 export function chordSymbolForParse(symbol) {

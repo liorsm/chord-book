@@ -1,12 +1,21 @@
 import {
   isChordToken,
   stripOctaveMark,
+  splitOctaveMark,
+  reattachOctaveDigit,
+  isBareMajorRoot,
   chordSymbolForParse,
   CHORD_CANDIDATE_REGEX,
   chordFromMatch,
-} from './chordSymbol';
+} from './chordSymbol.js';
 
-export { isChordToken, stripOctaveMark, chordSymbolForParse, CHORD_CANDIDATE_REGEX };
+export {
+  isChordToken,
+  stripOctaveMark,
+  chordSymbolForParse,
+  CHORD_CANDIDATE_REGEX,
+  isBareMajorRoot,
+};
 
 /** @deprecated השתמש ב-CHORD_CANDIDATE_REGEX */
 export const STANDALONE_CHORD_REGEX = CHORD_CANDIDATE_REGEX;
@@ -14,6 +23,8 @@ export const STANDALONE_CHORD_REGEX = CHORD_CANDIDATE_REGEX;
 const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const FLAT_MAP = { Db: 'C#', Eb: 'D#', Gb: 'F#', Ab: 'G#', Bb: 'A#' };
 const SHARP_MAP = { 'C#': 'C#', 'D#': 'D#', 'F#': 'F#', 'G#': 'G#', 'A#': 'A#' };
+
+const HEBREW_RE = /[\u0590-\u05FF]/;
 
 export function normalizeRoot(root) {
   if (!root) return root;
@@ -23,23 +34,48 @@ export function normalizeRoot(root) {
   return FLAT_MAP[combined] || SHARP_MAP[combined] || combined;
 }
 
+/**
+ * שורת אקורדים בלבד (בלי מילים) — מאפשרת טרנספוז של שורשים בודדים כמו A / E.
+ */
+function isChordOnlyLine(line) {
+  const trimmed = line.trim();
+  if (!trimmed || HEBREW_RE.test(trimmed)) return false;
+
+  let leftover = trimmed.replace(/\[([^\]]+)\]/g, (match, chord) =>
+    isChordToken(chord.trim(), { allowLowercase: true }) ? ' ' : match
+  );
+
+  const re = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
+  leftover = leftover.replace(re, (match, chord) =>
+    isChordToken(chord) ? ' ' : match
+  );
+
+  leftover = leftover.replace(/[|/\-–—:\s()[\]{}]/g, '');
+  return leftover.length === 0 && /[A-Ga-g]/.test(trimmed);
+}
+
 export function transposeChord(chord, semitones) {
   const trimmed = chord.trim();
 
   const slashIdx = trimmed.indexOf('/');
   if (slashIdx > 0) {
-    const main = transposeChord(trimmed.slice(0, slashIdx), semitones);
-    const bass = transposeChord(trimmed.slice(slashIdx + 1), semitones);
+    const mainPart = trimmed.slice(0, slashIdx);
+    const bassPart = trimmed.slice(slashIdx + 1);
+    const mainSplit = splitOctaveMark(mainPart);
+    const bassSplit = splitOctaveMark(bassPart);
+    const main = reattachOctaveDigit(
+      transposeChord(mainSplit.base, semitones),
+      mainSplit.digit
+    );
+    const bass = reattachOctaveDigit(
+      transposeChord(bassSplit.base, semitones),
+      bassSplit.digit
+    );
     return `${main}/${bass}`;
   }
 
-  const octaveMatch = trimmed.match(/^(.+?)([#b][0-46-8])$/i);
-  if (octaveMatch) {
-    const transposed = transposeChord(octaveMatch[1], semitones);
-    return transposed + octaveMatch[2].slice(-2);
-  }
-
-  const match = trimmed.match(/^([A-Ga-g])([#b]?)(.*)$/);
+  const { base, digit } = splitOctaveMark(trimmed);
+  const match = base.match(/^([A-Ga-g])([#b]?)(.*)$/);
   if (!match) return chord;
 
   const root = normalizeRoot(match[1] + (match[2] || ''));
@@ -48,7 +84,7 @@ export function transposeChord(chord, semitones) {
   if (idx === -1) return chord;
 
   const newIdx = (idx + semitones + 12) % 12;
-  return NOTES[newIdx] + suffix;
+  return reattachOctaveDigit(NOTES[newIdx] + suffix, digit);
 }
 
 export function simplifyChord(chord) {
@@ -61,11 +97,8 @@ export function simplifyChord(chord) {
     s = s.slice(0, slashIdx);
   }
 
-  const octaveSuffix = s.match(/([#b][0-46-8])$/i);
-  const octave = octaveSuffix ? octaveSuffix[0] : '';
-  if (octave) s = s.slice(0, -octave.length);
-
-  const hadDim = /dim/i.test(s);
+  const { base, digit } = splitOctaveMark(s);
+  s = base;
 
   s = s.replace(/maj7/gi, '');
   s = s.replace(/min7|m7/gi, 'm');
@@ -75,22 +108,30 @@ export function simplifyChord(chord) {
   s = s.replace(/[#b]?9/g, '');
   s = s.replace(/7/g, '');
 
-  let result = (s || chord) + octave;
-  if (hadDim && /^[A-G][#b]?$/i.test(result)) {
-    result += 'm';
-  }
-  return result + bass;
+  const rootMatch = s.match(/^([A-Ga-g][#b]?)/i);
+  const root = rootMatch ? rootMatch[1] : s;
+  const quality = s.slice(root.length);
+  // נשאר רק m (או ריק) אחרי פישוט — לא להוסיף m ל-dim
+  const simplified = root + (/^m$/i.test(quality) ? 'm' : '');
+
+  return reattachOctaveDigit(simplified || chord, digit) + bass;
 }
 
-/** מעבד אקורדים בסוגריים [Am] ובמילים עצמאיות (שורת אקורדים מעל מילים) */
-export function transformAllChords(content, transformFn) {
-  if (!content) return content;
+/**
+ * טרנספוז/פישוט בשורה.
+ * אקורדים חופשיים רק בשורת אקורדים בלבד; במילים — רק [סוגריים].
+ * מונע שינוי של "I Am", "A whole new world" וכו'.
+ */
+function transformChordsInLine(line, transformFn) {
+  const chordOnly = isChordOnlyLine(line);
 
-  let result = content.replace(/\[([^\]]+)\]/g, (match, chord) => {
+  let result = line.replace(/\[([^\]]+)\]/g, (match, chord) => {
     const trimmed = chord.trim();
     if (!isChordToken(trimmed, { allowLowercase: true })) return match;
     return `[${transformFn(trimmed)}]`;
   });
+
+  if (!chordOnly) return result;
 
   const re = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
   result = result.replace(re, (match, chord) => {
@@ -99,6 +140,15 @@ export function transformAllChords(content, transformFn) {
   });
 
   return result;
+}
+
+/** מעבד אקורדים בסוגריים [Am] ובמילים עצמאיות (שורת אקורדים מעל מילים) */
+export function transformAllChords(content, transformFn) {
+  if (!content) return content;
+  return content
+    .split('\n')
+    .map((line) => transformChordsInLine(line, transformFn))
+    .join('\n');
 }
 
 export function transposeContent(content, semitones) {
@@ -129,39 +179,57 @@ export function getChordColor(chord, theme) {
 }
 
 export function formatChordsToHtml(content, theme) {
-  const escaped = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  if (!content) return '';
 
-  let html = escaped.replace(/\[([^\]]+)\]/g, (match, chord) => {
-    const trimmed = chord.trim();
-    if (!isChordToken(trimmed, { allowLowercase: true })) return match;
-    const color = getChordColor(trimmed, theme);
-    return `<span dir="ltr" class="chord" style="unicode-bidi:isolate;color:${color};font-weight:700">${trimmed}</span>`;
-  });
+  return content
+    .split('\n')
+    .map((line) => {
+      const chordOnly = isChordOnlyLine(line);
+      let escaped = line
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
 
-  const re = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
-  html = html.replace(re, (match, chord) => {
-    if (!isChordToken(chord)) return match;
-    const color = getChordColor(chord, theme);
-    return `<span dir="ltr" class="chord" style="unicode-bidi:isolate;color:${color};font-weight:700">${chord}</span>`;
-  });
+      escaped = escaped.replace(/\[([^\]]+)\]/g, (match, chord) => {
+        const trimmed = chord.trim();
+        if (!isChordToken(trimmed, { allowLowercase: true })) return match;
+        const color = getChordColor(trimmed, theme);
+        return `<span dir="ltr" class="chord" style="unicode-bidi:isolate;color:${color};font-weight:700">${trimmed}</span>`;
+      });
 
-  return html;
+      if (!chordOnly) return escaped;
+
+      const re = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
+      return escaped.replace(re, (match, chord) => {
+        if (!isChordToken(chord)) return match;
+        const color = getChordColor(chord, theme);
+        return `<span dir="ltr" class="chord" style="unicode-bidi:isolate;color:${color};font-weight:700">${chord}</span>`;
+      });
+    })
+    .join('\n');
 }
 
 export function extractUniqueChords(content) {
   const chords = new Set();
-  const bracketRegex = /\[([^\]]+)\]/g;
-  let m;
-  while ((m = bracketRegex.exec(content)) !== null) {
-    if (isChordToken(m[1], { allowLowercase: true })) chords.add(m[1].trim());
+  if (!content) return [];
+
+  for (const line of content.split('\n')) {
+    const chordOnly = isChordOnlyLine(line);
+
+    const bracketRegex = /\[([^\]]+)\]/g;
+    let m;
+    while ((m = bracketRegex.exec(line)) !== null) {
+      if (isChordToken(m[1], { allowLowercase: true })) chords.add(m[1].trim());
+    }
+
+    if (!chordOnly) continue;
+
+    const standaloneRegex = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
+    while ((m = standaloneRegex.exec(line)) !== null) {
+      const chord = chordFromMatch(m);
+      if (isChordToken(chord)) chords.add(chord.trim());
+    }
   }
-  const standaloneRegex = new RegExp(CHORD_CANDIDATE_REGEX.source, 'gi');
-  while ((m = standaloneRegex.exec(content)) !== null) {
-    const chord = chordFromMatch(m);
-    if (isChordToken(chord)) chords.add(chord.trim());
-  }
+
   return [...chords];
 }
