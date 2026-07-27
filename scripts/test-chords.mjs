@@ -105,6 +105,21 @@ console.log('\nclassifyLine / format — מילים vs אקורדים');
   assertEq('שורש בודד = chords', classifyLine('A'), 'chords');
   assertEq('Am בודד = chords', classifyLine('Am'), 'chords');
   assertEq('D  D/G  D = chords', classifyLine('D  D/G  D'), 'chords');
+  assertEq(
+    'C# עם LRM אחרי # = chords',
+    classifyLine('C#\u200E    D#m                      B                    G#m'),
+    'chords',
+  );
+  assert('C#‎ בודד תקף', isChordToken('C#\u200E'));
+
+  const htmlWithLrm = formatSongContentToHtml(
+    'C#\u200E    D#m                      B                    G#m\nיש לי סיפור',
+    null,
+    'rtl',
+  );
+  assert('שורת C#‎ עם LRM מקבלת song-chords', htmlWithLrm.includes('song-chords'));
+  assert('C# עטוף אחרי ניקוי LRM', /data-chord="C#"/.test(htmlWithLrm));
+  assert('D#m עטוף אחרי ניקוי LRM', /data-chord="D#m"/.test(htmlWithLrm));
 
   const html = formatSongContentToHtml(
     [

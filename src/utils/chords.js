@@ -7,6 +7,7 @@ import {
   chordSymbolForParse,
   CHORD_CANDIDATE_REGEX,
   chordFromMatch,
+  stripInvisibleFormatChars,
 } from './chordSymbol.js';
 
 export {
@@ -38,7 +39,7 @@ export function normalizeRoot(root) {
  * שורת אקורדים בלבד (בלי מילים) — מאפשרת טרנספוז של שורשים בודדים כמו A / E.
  */
 function isChordOnlyLine(line) {
-  const trimmed = line.trim();
+  const trimmed = stripInvisibleFormatChars(line).trim();
   if (!trimmed || HEBREW_RE.test(trimmed)) return false;
 
   let leftover = trimmed.replace(/\[([^\]]+)\]/g, (match, chord) =>
@@ -145,7 +146,7 @@ function transformChordsInLine(line, transformFn) {
 /** מעבד אקורדים בסוגריים [Am] ובמילים עצמאיות (שורת אקורדים מעל מילים) */
 export function transformAllChords(content, transformFn) {
   if (!content) return content;
-  return content
+  return stripInvisibleFormatChars(content)
     .split('\n')
     .map((line) => transformChordsInLine(line, transformFn))
     .join('\n');
@@ -181,7 +182,7 @@ export function getChordColor(chord, theme) {
 export function formatChordsToHtml(content, theme) {
   if (!content) return '';
 
-  return content
+  return stripInvisibleFormatChars(content)
     .split('\n')
     .map((line) => {
       const chordOnly = isChordOnlyLine(line);
@@ -213,7 +214,7 @@ export function extractUniqueChords(content) {
   const chords = new Set();
   if (!content) return [];
 
-  for (const line of content.split('\n')) {
+  for (const line of stripInvisibleFormatChars(content).split('\n')) {
     const chordOnly = isChordOnlyLine(line);
 
     const bracketRegex = /\[([^\]]+)\]/g;

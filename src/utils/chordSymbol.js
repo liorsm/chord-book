@@ -4,6 +4,18 @@ import { get as getNote } from '@tonaljs/note';
 const EXTENSIONS =
   'maj7|maj|m7|min7|min|dim7|dim|aug|sus4|sus2|add9|add|m|7|9|11|13|6|5|2|b5|#5|b9|#9|#11|b13';
 
+/**
+ * תווי כיוון/פורמט בלתי־נראים שנדבקים בהדבקה (במיוחד LRM אחרי # בטקסט עברי).
+ * כולל: ZWSP/ZWNJ/ZWJ, LRM/RLM, bidi embeds/isolates, WJ, BOM.
+ */
+const INVISIBLE_FORMAT_RE = /[\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFEFF]/g;
+
+/** מסיר תווי כיוון/פורמט בלתי־נראים שמפריעים לזיהוי אקורדים */
+export function stripInvisibleFormatChars(text) {
+  if (text == null || text === '') return text;
+  return String(text).replace(INVISIBLE_FORMAT_RE, '');
+}
+
 /** גבול סוף אקורד — לא \\b כי # אינו תו-מילה ב-JS (E/G# נחתך ב-\\b אחרי G) */
 const CHORD_END_LOOKAHEAD = '(?=[\\s\\])}<.,;:!?|\\-–—]|$)';
 
@@ -113,7 +125,7 @@ function isNoteWithOctave(s) {
  * תומך גם בסימון ישראלי נפוץ: A#4, Bb3 (= אקורד + ספרה, לא תו בודד).
  */
 export function isChordToken(str, { allowLowercase = false } = {}) {
-  const s = String(str).trim();
+  const s = stripInvisibleFormatChars(String(str)).trim();
   if (!s || s.length > 32 || HEBREW_RE.test(s)) return false;
   if (!allowLowercase && !hasUppercaseChordRoot(s)) return false;
 

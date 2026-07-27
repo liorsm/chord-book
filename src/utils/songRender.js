@@ -2,6 +2,7 @@ import {
   isChordToken,
   CHORD_CANDIDATE_REGEX,
   chordFromMatch,
+  stripInvisibleFormatChars,
 } from "./chordSymbol.js";
 import { stripChordsFromText } from "./direction.js";
 
@@ -86,7 +87,7 @@ export function formatLineWithChords(
  * "A whole new world" / "I Am is me" אינן שורות אקורדים.
  */
 export function isChordLine(line) {
-  const trimmed = line.trim();
+  const trimmed = stripInvisibleFormatChars(line).trim();
   if (!trimmed) return false;
   if (HEBREW_RE.test(trimmed)) return false;
 
@@ -141,8 +142,9 @@ export function formatSongContentToHtml(content, theme, layoutDir = "rtl") {
 
   const isRtl = layoutDir === "rtl";
   const align = isRtl ? "right" : "left";
+  const cleaned = stripInvisibleFormatChars(content);
 
-  return content
+  return cleaned
     .split("\n")
     .map((line) => {
       const type = classifyLine(line);

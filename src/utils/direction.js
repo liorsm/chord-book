@@ -1,9 +1,12 @@
-import { findChordsInText } from './chordSymbol.js';
+import {
+  findChordsInText,
+  stripInvisibleFormatChars,
+} from './chordSymbol.js';
 
 /** מסיר אקורדים לפני ספירת תווים לזיהוי שפה */
 export function stripChordsFromText(text) {
   if (!text) return '';
-  let result = text.replace(/\[[^\]]+\]/g, ' ');
+  let result = stripInvisibleFormatChars(text).replace(/\[[^\]]+\]/g, ' ');
   const chords = findChordsInText(result).sort((a, b) => b.index - a.index);
   for (const { index, length } of chords) {
     result = `${result.slice(0, index)}${' '.repeat(length)}${result.slice(index + length)}`;
