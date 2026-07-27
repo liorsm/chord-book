@@ -5,9 +5,11 @@ import Alert from "@mui/material/Alert";
 import Header from "./Header";
 import MobileNav from "./MobileNav";
 import { useAuth } from "../../contexts/AuthContext";
+import { useThemeMode } from "../../ThemeContext";
 
 export default function Layout() {
   const { authNotice, clearAuthNotice } = useAuth();
+  const { mode } = useThemeMode();
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -32,7 +34,9 @@ export default function Layout() {
           flex: 1,
           pb: { xs: 10, md: 4 },
           background:
-            "linear-gradient(180deg, rgba(23,18,46,0.5) 0%, rgba(33,24,68,0.8) 100%)",
+            mode === "dark"
+              ? "linear-gradient(180deg, rgba(23,18,46,0.5) 0%, rgba(33,24,68,0.8) 100%)"
+              : "#ffffff",
         }}
       >
         <Outlet />

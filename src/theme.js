@@ -21,7 +21,7 @@ export const getTheme = (mode) =>
         main: mode === 'dark' ? '#a855f7' : '#6d28d9',
       },
       background: {
-        default: mode === 'dark' ? '#1a0033' : '#faf5ff',
+        default: mode === 'dark' ? '#1a0033' : '#ffffff',
         paper: mode === 'dark' ? '#1e1b4b' : '#ffffff',
       },
       text: {
@@ -50,7 +50,7 @@ export const getTheme = (mode) =>
             background:
               mode === 'dark'
                 ? 'linear-gradient(180deg, #1a0033 0%, #2a0a4a 100%)'
-                : 'linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%)',
+                : '#ffffff',
             minHeight: '100vh',
           },
         },
